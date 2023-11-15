@@ -24,12 +24,14 @@ git remote add origin https://github.com/scalexi/scalexi.git
 # Verifies the new remote URL
 git remote -v
 
+git pull --rebase origin main
+
 # Pushes the changes in your local repository up to the GitHub repository
 git push origin main
 
 # Tagging the version
 # You should replace '1.0.0' with your version number
-git tag 1.0.0
+git tag 0.1.0
 
 # Pushes the tags in your local repository to GitHub
 git push origin --tags
