@@ -1,5 +1,9 @@
 import logging
 import os 
+import tiktoken
+import pandas as pd
+import json
+
 # Read logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
 
@@ -12,7 +16,7 @@ logging.basicConfig(
 # Create a logger object
 logger = logging.getLogger(__name__)
 
-class OpenAIPricingData:
+class OpenAIPricing:
     """
     A class for handling and accessing pricing data for various OpenAI models.
 
@@ -95,7 +99,7 @@ class OpenAIPricingData:
 
     def __init__(self, json_data: dict):
         """
-        Initializes the OpenAIPricingData with JSON data.
+        Initializes the OpenAIPricing with JSON data.
 
         Parameters:
         
@@ -401,23 +405,7 @@ class OpenAIPricingData:
                 raise ValueError(f"Audio model '{model_name}' not found in the pricing data.")
         else:
             return models
-
     
-    
-class OpenAIPricingCalculator:
-    """Calculates the estimated cost of using OpenAI models for training or fine-tuning."""
-
-    def __init__(self, pricing_data: OpenAIPricingData):
-        """
-        Initializes the OpenAIPricingCalculator with given pricing data object.
-
-        Parameters
-        ----------
-        pricing_data : OpenAIPricingData
-            An instance of OpenAIPricingData containing various model pricing information.
-        """
-        self.pricing_data = pricing_data
-
     def estimate_finetune_training_cost(self, number_of_tokens: int, model_name: str = "gpt-3.5-turbo")-> float:
         """
             Estimates the cost of training or fine-tuning based on token count and model.
@@ -441,11 +429,152 @@ class OpenAIPricingCalculator:
             """
         logger.debug(f"Starting Cost Estimation for {number_of_tokens} tokens using {model_name}")
         try:
-            cost_per_token = self.pricing_data.get_fine_tuning_model_pricing(model_name)['training'] / 1000.0
+            cost_per_token = self.get_fine_tuning_model_pricing(model_name)['training'] / 1000.0
             logger.debug(f"Estimated cost for {number_of_tokens}")
             estimated_cost = cost_per_token * number_of_tokens
             logger.debug(f"Estimated cost for {number_of_tokens} tokens using {model_name}: ${estimated_cost:.2f}")
             return estimated_cost
         except Exception as e:
-            logger.error(f"[OpenAIPricingCalculator] Pricing information for model {model_name} not found.\n", exc_info=False)
+            logger.error(f"[OpenAIPricing] Pricing information for model {model_name} not found.\n", exc_info=False)
             raise ValueError(f"Pricing information for model {model_name} not found.")
+
+    def estimate_inference_cost(self, input_tokens: int, output_tokens: int, model_name: str = "gpt-3.5-turbo")-> float:
+        """
+            Estimates the cost of inference based on token count and model.
+
+            Parameters
+            ----------
+            input_tokens : int
+                The number of tokens that will be processed as input.
+            output_tokens : int
+                The number of tokens that will be processed as output.
+            model_name : str, optional
+                The name of the model to be used, defaulting to 'gpt-3.5-turbo'.
+
+            Returns
+            -------
+            float
+                The estimated cost for the specified number of tokens and operation.
+
+            Raises
+            ------
+            ValueError
+                If pricing for the specified model is not found in the pricing data.
+            """
+        logger.debug(f"Starting Cost Estimation for {input_tokens} input tokens and {output_tokens} output tokens using {model_name}")
+        try:
+            input_cost_per_token = self.get_fine_tuning_model_pricing(model_name)['input_usage'] / 1000.0
+            output_cost_per_token = self.get_fine_tuning_model_pricing(model_name)['output_usage'] / 1000.0
+            logger.debug(f"Estimated cost for {input_tokens} input tokens and {output_tokens} output tokens using {model_name}: ${input_cost_per_token * input_tokens + output_cost_per_token * output_tokens:.2f}")
+            return input_cost_per_token * input_tokens + output_cost_per_token * output_tokens
+        except Exception as e:
+            logger.error(f"[OpenAIPricing] Pricing information for model {model_name} not found.\n", exc_info=False)
+            raise ValueError(f"Pricing information for model {model_name} not found.")
+    
+
+
+    def calculate_token_usage_for_messages(self, messages, model="gpt-3.5-turbo-0613"):
+        """
+        Calculate the total number of tokens used by a list of messages.
+
+        This function estimates the token usage for messages based on the model's
+        tokenization scheme. It supports different versions of GPT-3.5 Turbo and
+        GPT-4 models. For unsupported models, a NotImplementedError is raised.
+        This is used to estimate the cost of interactions with OpenAI's API based
+        on message lengths.
+
+        Parameters
+        ----------
+        messages : list of dict
+            List of message dictionaries with keys like 'role', 'name', and 'content'.
+        model : str, optional
+            Identifier of the model to estimate token count. Default is "gpt-3.5-turbo-0613".
+
+        Returns
+        -------
+        int
+            Total number of tokens for the messages as per the model's encoding scheme.
+
+        Raises
+        ------
+        KeyError
+            If the model's encoding is not found.
+        NotImplementedError
+            If token counting is not implemented for the model.
+
+        Examples
+        --------
+        >>> messages = [{"role": "user", "content": "Hello!"}, 
+        ...             {"role": "assistant", "content": "Hi there!"}]
+        >>> calculate_token_usage_for_messages(messages)
+        14  # Example token count for "gpt-3.5-turbo-0613" model.
+        """
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            print("Warning: Model not found. Using cl100k_base encoding.")
+            encoding = tiktoken.get_encoding("cl100k_base")
+        
+        # Token allocation per model
+        tokens_allocation = {
+            "gpt-3.5-turbo-0613": (3, 1),
+            "gpt-3.5-turbo-16k-0613": (3, 1),
+            "gpt-4-0314": (3, 1),
+            "gpt-4-32k-0314": (3, 1),
+            "gpt-4-0613": (3, 1),
+            "gpt-4-32k-0613": (3, 1),
+            "gpt-3.5-turbo-0301": (4, -1)  # every message follows {role/name}\n{content}\n
+        }
+
+        # Default tokens per message and name
+        tokens_per_message, tokens_per_name = tokens_allocation.get(
+            model, 
+            (3, 1)  # Default values
+        )
+        
+        # Handling specific model updates
+        if "gpt-3.5-turbo" in model:
+            print("Warning: gpt-3.5-turbo may update over time. Assuming gpt-3.5-turbo-0613.")
+            tokens_per_message, tokens_per_name = tokens_allocation["gpt-3.5-turbo-0613"]
+        elif "gpt-4" in model:
+            print("Warning: gpt-4 may update over time. Assuming gpt-4-0613.")
+            tokens_per_message, tokens_per_name = tokens_allocation["gpt-4-0613"]
+        else:
+            raise NotImplementedError(
+                f"Token counting not implemented for model {model}. "
+                "See the OpenAI Python library documentation for details."
+            )
+        
+        # Token counting
+        num_tokens = 3  # every reply is primed with 'assistant'
+        for message in messages:
+            num_tokens += tokens_per_message
+           #ensure that we encode only a string. Enforce str(value) this to avoid encoding errors
+            num_tokens += sum(len(encoding.encode(str(value))) for key, value in message.items())
+            if "name" in message:
+                num_tokens += tokens_per_name
+
+        return num_tokens
+
+    def load_dataset(self, file_path):
+        """
+        Load a dataset from a file which can be in CSV, JSON or JSONL format.
+        """
+        if file_path.endswith('.csv'):
+            return pd.read_csv(file_path).to_dict(orient='records')
+        elif file_path.endswith('.json'):
+            with open(file_path, 'r') as file:
+                return json.load(file)
+        elif file_path.endswith('.jsonl'):
+            with open(file_path, 'r') as file:
+                return [json.loads(line) for line in file]
+        else:
+            raise ValueError("Unsupported file format. Please use CSV, JSON, or JSONL.")
+
+    def calculate_token_usage_for_dataset(self, dataset_path, model="gpt-3.5-turbo-0613"):
+        """
+        Calculate the total number of tokens used by a dataset.
+        """
+        messages = self.load_dataset(dataset_path)
+        return self.calculate_token_usage_for_messages(messages, model=model)
+    

@@ -8,7 +8,7 @@ setup(
     package_data={'scalexi': ['data/*']},
     install_requires=[
         "pandas",  # Add any package dependencies here
-        "openai",   # Add any other dependencies as needed
+        "openai>=1.0.0", #this package is not compatible with earlier versions of openai
         "sphinx",   # Add any other dependencies as needed
         "sphinx_rtd_theme",   # Add any other dependencies as needed
         "tiktoken",  # Add any other dependencies as needed
