@@ -2,7 +2,7 @@ git add .
 git commit -m "commit changes v0.2.0"
 
 # This sets a new tag for the latest commit
-git tag v0.2.0
+#git tag v0.2.0
 
 # This moves the v0.1.1 tag to where v0.1.0 was previously
 # You might need to use -f flag to force the move if the tag already exists
