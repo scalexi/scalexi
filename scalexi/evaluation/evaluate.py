@@ -9,7 +9,7 @@ import time
 import logging
 import httpx
 import datetime
-
+#
 # Read logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
 
