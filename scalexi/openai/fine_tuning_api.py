@@ -4,6 +4,19 @@ from typing import Optional
 from typing import Union
 import os
 from typing import List, Dict
+import logging
+
+# Read logging level from environment variable
+logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
+
+# Configure logging with the level from the environment variable
+logging.basicConfig(
+    level=getattr(logging, logging_level, logging.WARNING),  # Default to WARNING if invalid level
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Create a logger object
+logger = logging.getLogger(__name__)
 
 class FineTuningAPI:
     def __init__(self, api_key=None):
@@ -192,9 +205,25 @@ class FineTuningAPI:
 
         try:
             response = self.client.fine_tuning.jobs.retrieve(job_id)
-            return response.data
-        except openai.error.OpenAIError as e:
-            raise openai.error.OpenAIError(f"An error occurred while retrieving the fine-tuning job: {e}")
+            return response
+        
+        except openai.APIConnectionError as e:                            
+                logger.error(f"[retrieve_fine_tuning_job] APIConnectionError error:\n{e}")
+
+        except openai.RateLimitError as e:
+            # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
+            logger.error(f"[retrieve_fine_tuning_job] RateLimit Error {e}. Trying again in 0.5 seconds...")
+
+        except openai.APIStatusError as e:
+            logger.error(f"[retrieve_fine_tuning_job] APIStatusError:\n{e}")
+            # If the request fails due to service unavailability, sleep for 10 seconds and then try again without incrementing the retry counter
+
+        except AttributeError as e:            
+            logger.error(f"[retrieve_fine_tuning_job] AttributeError:\n{e}")
+            # You can also add additional error handling code here if needed
+
+        except Exception as e:
+            raise Exception(f"An error occurred during model evaluation: {e}")
 
 
     def cancel_fine_tuning_job(self, job_id: str) -> Dict:
@@ -224,8 +253,25 @@ class FineTuningAPI:
         try:
             response = self.client.fine_tuning.jobs.cancel(job_id)
             return response
-        except openai.error.OpenAIError as e:
-            raise openai.error.OpenAIError(f"An error occurred while canceling the fine-tuning job: {e}")
+        
+        except openai.APIConnectionError as e:                            
+                logger.error(f"[cancel_fine_tuning_job] APIConnectionError error:\n{e}")
+
+        except openai.RateLimitError as e:
+            # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
+            logger.error(f"[cancel_fine_tuning_job] RateLimit Error {e}. Trying again in 0.5 seconds...")
+
+        except openai.APIStatusError as e:
+            logger.error(f"[cancel_fine_tuning_job] APIStatusError:\n{e}")
+            # If the request fails due to service unavailability, sleep for 10 seconds and then try again without incrementing the retry counter
+
+        except AttributeError as e:            
+            logger.error(f"[cancel_fine_tuning_job] AttributeError:\n{e}")
+            # You can also add additional error handling code here if needed
+
+        except Exception as e:
+            raise Exception(f"[cancel_fine_tuning_job] An error occurred during model evaluation: {e}")
+
 
     
     def list_fine_tune_files(self) -> List[Dict]:
@@ -288,8 +334,26 @@ class FineTuningAPI:
         try:
             response = self.client.fine_tuning.jobs.list_events(fine_tuning_job_id=fine_tuning_job_id, limit=limit)
             return response
-        except openai.error.OpenAIError as e:
-            raise openai.error.OpenAIError(f"An error occurred while listing events for the fine-tuning job: {e}")
+        except openai.APIConnectionError as e:                            
+                logger.error(f"[list_events_fine_tuning_job] APIConnectionError error:\n{e}")
+
+        except openai.RateLimitError as e:
+            # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
+            logger.error(f"[list_events_fine_tuning_job] RateLimit Error {e}. Trying again in 0.5 seconds...")
+
+        except openai.APIStatusError as e:
+            logger.error(f"[list_events_fine_tuning_job] APIStatusError:\n{e}")
+            # If the request fails due to service unavailability, sleep for 10 seconds and then try again without incrementing the retry counter
+
+        except AttributeError as e:            
+            logger.error(f"[list_events_fine_tuning_job] AttributeError:\n{e}")
+            # You can also add additional error handling code here if needed
+
+        except Exception as e:
+            raise Exception(f"[list_events_fine_tuning_job] An error occurred during model evaluation: {e}")
+
+    
+    
     def delete_fine_tuned_model(self, model_id: str) -> Dict:
         """
         Delete a fine-tuned model. The caller must be the owner of the organization the model was created in.
@@ -317,8 +381,23 @@ class FineTuningAPI:
         try:
             response = self.client.models.delete(model_id)
             return response
-        except openai.error.OpenAIError as e:
-            raise openai.error.OpenAIError(f"An error occurred while deleting the fine-tuned model: {e}")
+        except openai.APIConnectionError as e:                            
+                logger.error(f"[delete_fine_tuned_model] APIConnectionError error:\n{e}")
+
+        except openai.RateLimitError as e:
+            # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
+            logger.error(f"[delete_fine_tuned_model] RateLimit Error {e}. Trying again in 0.5 seconds...")
+
+        except openai.APIStatusError as e:
+            logger.error(f"[delete_fine_tuned_model] APIStatusError:\n{e}")
+            # If the request fails due to service unavailability, sleep for 10 seconds and then try again without incrementing the retry counter
+
+        except AttributeError as e:            
+            logger.error(f"[delete_fine_tuned_model] AttributeError:\n{e}")
+            # You can also add additional error handling code here if needed
+
+        except Exception as e:
+            raise Exception(f"[delete_fine_tuned_model] An error occurred during model evaluation: {e}")
 
     def use_fine_tuned_model(self, model_name: str, user_prompt:str, system_prompt="You are a helpful assistant." ) -> str:
         """
@@ -365,8 +444,23 @@ class FineTuningAPI:
                         ]
             )
             return response.choices[0].message
+        except openai.APIConnectionError as e:                            
+                logger.error(f"[use_fine_tuned_model] APIConnectionError error:\n{e}")
+
+        except openai.RateLimitError as e:
+            # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
+            logger.error(f"[use_fine_tuned_model] RateLimit Error {e}. Trying again in 0.5 seconds...")
+
+        except openai.APIStatusError as e:
+            logger.error(f"[use_fine_tuned_model] APIStatusError:\n{e}")
+            # If the request fails due to service unavailability, sleep for 10 seconds and then try again without incrementing the retry counter
+
+        except AttributeError as e:            
+            logger.error(f"[use_fine_tuned_model] AttributeError:\n{e}")
+            # You can also add additional error handling code here if needed
+
         except Exception as e:
-            raise Exception(f"An error occurred while using the fine-tuned model: {e}")
+            raise Exception(f"[use_fine_tuned_model] An error occurred during model evaluation: {e}")
 
     def run_dashboard(self):
         """

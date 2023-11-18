@@ -2,13 +2,12 @@ import pandas as pd
 import random
 import json
 import os
-from datetime import datetime
 import openai
 from openai import OpenAI
 import time 
 import logging
 import httpx
-import datetime
+from datetime import datetime
 #
 # Read logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
@@ -465,10 +464,10 @@ class LLMEvaluation ():
         except Exception as e:
             raise Exception(f"An unexpected error occurred: {e}")
         
-    def evaluate_model(self, finetuned_model, input_csv, output_csv, 
+    def evaluate_model(self, finetuned_model, dataset_csv_path, results_csv_path, 
                        temperature=1.0, max_tokens=150, top_p=1.0, 
                        frequency_penalty=0, presence_penalty=0,
-                       sugpt_model_start_sequence="", 
+                       model_start_sequence="", 
                        llm_evaluator_model_name="gpt-3.5-turbo", dataset_size=100,
                        finetuned_model_start_sequence_only_for_base_models="",
                        experiment_id=1,
@@ -478,27 +477,49 @@ class LLMEvaluation ():
 
         Args:
             finetuned_model (str): Name of the model to evaluate.
-            input_csv (str): Path to the CSV file containing prompts and completions.
-            output_csv (str): Path to save the evaluated results.
+            dataset_csv_path (str): Path to the CSV file containing prompts and completions.
+            results_csv_path (str): Path to save the evaluated results.
             temperature (float): Sampling temperature for generation. Default is 1.0.
             max_tokens (int): Maximum tokens for generated responses. Default is 150.
             top_p (float): Top p sampling for generation. Default is 1.0.
-            finetuned_model_start_sequence (str): Start sequence for base models.
+            frequency_penalty (float): Frequency penalty parameter. Default is 0.
+            presence_penalty (float): Presence penalty parameter. Default is 0.
+            model_start_sequence (str): Start sequence for the model, if applicable.
             llm_evaluator_model_name (str): Name of the large language model for evaluation. Default is "gpt-3.5-turbo".
             dataset_size (int): Size of the dataset for evaluation. Default is 100.
+            finetuned_model_start_sequence_only_for_base_models (str): Start sequence for base models.
+            experiment_id (int): Identifier for the experiment. Default is 1.
+            save_immediately (bool): If True, saves each evaluation result immediately. Default is False.
 
         Returns:
             None
 
         Raises:
             FileNotFoundError: If the input CSV file is not found.
+            ValueError: If the input file is not a CSV or missing required columns.
             Exception: For other exceptions that may occur during processing.
         """
-        if not os.path.exists(input_csv):
-            raise FileNotFoundError(f"The input CSV file {input_csv} was not found.")
+        if not os.path.exists(dataset_csv_path):
+            raise FileNotFoundError(f"[evaluate_model] The input CSV file {dataset_csv_path} was not found.")
+
+        # Check if the file extension is .csv
+        if not dataset_csv_path.endswith('.csv'):
+          raise ValueError(f"[evaluate_model] The input file {dataset_csv_path} is not a CSV file. Make sure that input_csv of the dataset to evaluate is in a CSV Format.")
+
+        
 
         try:
-            df_input = pd.read_csv(input_csv)
+            df_input = pd.read_csv(dataset_csv_path)
+
+            # Required columns
+            required_columns = ['initial_prompt', 'prompt', 'ground_truth_completion', 'classification']
+
+            # Check if all required columns are present
+            if not all(column in df_input.columns for column in required_columns):
+                missing_columns = [column for column in required_columns if column not in df_input.columns]
+                raise ValueError(f"The CSV file is missing the following required columns: {', '.join(missing_columns)}")
+
+            df_input = pd.read_csv(dataset_csv_path)
             all_frames = []
 
             for index, row in df_input.iterrows():
@@ -512,7 +533,7 @@ class LLMEvaluation ():
                 score, scoring_reason = self.score_response(prompt, ground_truth_completion, generated_completion)
 
                 # Get the current timestamp
-                current_time = datetime.datetime.now()
+                current_time = datetime.now()
                 timestamp_str = current_time.strftime("%Y%m%d%H%M%S")
 
                 # Add the timestamp to the output_data dictionary
@@ -553,11 +574,11 @@ class LLMEvaluation ():
                 # Save the data immediately if specified
                 if save_immediately:
                     # Check if the output CSV file already exists
-                    file_exists = os.path.exists(output_csv)
+                    file_exists = os.path.exists(results_csv_path)
                     # Append the new data to the CSV file
                     mode = 'a' if file_exists else 'w'
                     header = not file_exists  # Write header only if file doesn't exist
-                    pd.DataFrame([output_data]).to_csv(output_csv, mode=mode, header=header, index=False)                
+                    pd.DataFrame([output_data]).to_csv(results_csv_path, mode=mode, header=header, index=False)                
 
                 # To avoid hitting rate limits
                 time.sleep(1.0)  
@@ -566,10 +587,28 @@ class LLMEvaluation ():
                 # Create a DataFrame from the list of dictionaries
                 df = pd.DataFrame(all_frames)
                 # Save the DataFrame to a CSV file
-                df.to_csv(output_csv, index=False)
+                df.to_csv(results_csv_path, index=False)
 
             # Generate statistics and save them
             #self.save_stats(final_df, psugpt_model)
+
+        except pd.errors.ParserError as e:
+          raise ValueError(f"The file {dataset_csv_path} could not be parsed as CSV: {e}")
+
+        except openai.APIConnectionError as e:                            
+                logger.error(f"[evaluate_model] APIConnectionError error:\n{e}")
+
+        except openai.RateLimitError as e:
+            # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
+            logger.error(f"[evaluate_model] RateLimit Error {e}. Trying again in 0.5 seconds...")
+
+        except openai.APIStatusError as e:
+            logger.error(f"[evaluate_model] APIStatusError:\n{e}")
+            # If the request fails due to service unavailability, sleep for 10 seconds and then try again without incrementing the retry counter
+
+        except AttributeError as e:            
+            logger.error(f"[evaluate_model] AttributeError:\n{e}")
+            # You can also add additional error handling code here if needed
 
         except Exception as e:
             raise Exception(f"An error occurred during model evaluation: {e}")

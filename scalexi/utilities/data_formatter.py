@@ -714,3 +714,51 @@ class DataFormatter:
             for record in root:
                 row_data = [element.text for element in record]
                 csv_writer.writerow(row_data)
+
+    def csv_to_jsonl(self, csv_file_path, jsonl_file_path):
+        """
+        Convert CSV data to a JSON Lines file.
+
+        This function takes CSV data from a file and converts it into a JSON Lines file.
+
+        Parameters
+        ----------
+        csv_file_path : str
+            The path to the CSV file containing the data.
+
+        jsonl_file_path : str
+            The path to the JSON Lines file where the data will be saved.
+
+        Examples
+        --------
+        >>> csv_to_jsonl("data.csv", "data.jsonl")
+        """
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv(csv_file_path)
+
+        # Convert the DataFrame to JSON Lines and save it to a file
+        df.to_json(jsonl_file_path, orient="records", lines=True)
+
+    def jsonl_to_csv(self, jsonl_file_path, csv_file_path):
+        """
+        Convert JSON Lines data to a CSV file.
+
+        This function takes data from a JSON Lines file and converts it into a CSV file.
+
+        Parameters
+        ----------
+        jsonl_file_path : str
+            The path to the JSON Lines file containing the data.
+        
+        csv_file_path : str
+            The path to the CSV file where the data will be saved.
+
+        Examples
+        --------
+        >>> jsonl_to_csv("data.jsonl", "data.csv")
+        """
+        # Read the JSON Lines file into a DataFrame
+        df = pd.read_json(jsonl_file_path, lines=True)
+
+        # Convert the DataFrame to CSV and save it to a file
+        df.to_csv(csv_file_path, index=False)

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="scalexi",
-    version="0.1.5.2",
+    version="0.3.3",
     packages=find_packages(),
     include_package_data=True,
     package_data={'scalexi': ['data/*']},
@@ -10,10 +10,13 @@ setup(
         "pandas",  # Add any package dependencies here
         "openai>=1.0.0", #this package is not compatible with earlier versions of openai
         "sphinx",   # Add any other dependencies as needed
+        "cohere",
         "sphinx_rtd_theme",   # Add any other dependencies as needed
         "tiktoken",  # Add any other dependencies as needed
         "pyyaml",
-        "lxml"
+        "lxml",
+        "requests",
+        "httpx"
     ],
     entry_points={
         "console_scripts": [

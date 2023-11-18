@@ -317,7 +317,7 @@ class PromptCompletionGenerator:
                 logger.info(f"[generate_prompt_completions] Successfully parsed JSON response")
                 
                 # Save to CSV
-                list_to_save = [{"Prompt": pair["prompt"], "Completion": pair["completion"]} for pair in prompt_completion_pairs]
+                list_to_save = [{"prompt": pair["prompt"], "completion": pair["completion"]} for pair in prompt_completion_pairs]
                 self.data_formatter.list_to_csv(list_to_save, output_csv)
                 return self.data_formatter.remove_json_markers(json_string) # remove ```json and ``` from the string and return the json string
                 #else:
