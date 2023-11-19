@@ -9,6 +9,7 @@ from openai import OpenAI
 import httpx
 from typing import List, Dict, Optional
 import scalexi.utilities.data_formatter as dfm
+from scalexi.document_loaders.context_loaders import ContextExtractor
 
 # Read logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
@@ -30,11 +31,19 @@ DEFAULT_SYSTEM_PROMPT = """You are an assistant to create a JSON Array of prompt
                                 """
 
 class PromptCompletionGenerator:
-    def __init__(self, openai_key: Optional[str] = None):
+    def __init__(self, openai_key: Optional[str] = None, enable_timeouts= False, timeouts_options= None):
         # Set the OpenAI API key
-        self.openai_api_key = openai_key if openai_key else os.environ.get("OPENAI_API_KEY")
+        self.openai_api_key = openai_key if openai_key is not None else os.getenv("OPENAI_API_KEY")
         if not self.openai_api_key or not self.openai_api_key.startswith("sk-"):
             raise ValueError("Invalid OpenAI API key.")
+        self.client = OpenAI(api_key=self.openai_api_key, max_retries=3)
+        if enable_timeouts:
+            if timeouts_options is None:
+                timeouts_options = {"total": 120, "read": 60.0, "write": 60.0, "connect": 10.0}
+                self.client = self.client.with_options(timeout=httpx.Timeout(120.0, read=60.0, write=60.0, connect=10.0))
+            else:
+                self.client = self.client.with_options(timeout=httpx.Timeout(timeouts_options["total"], timeouts_options["read"], timeouts_options["write"], timeouts_options["connect"]))
+        self.context_extractor = ContextExtractor()
 
         # Set the API key for the OpenAI client
         openai.api_key = self.openai_api_key
@@ -123,17 +132,33 @@ class PromptCompletionGenerator:
 
         # Define static questions for different question types
         static_questions = {
+            # Existing types
             "open-ended": ["What is the capital of France", "How does photosynthesis work", "Where is the Eiffel Tower located", "Why do birds migrate", "When did World War II end"],
             "yes-no": ["Is the sky blue", "Can you swim", "Do cats have tails", "Will it rain tomorrow", "Did you eat breakfast"],
-            "multiple-choice": ["Which of the following fruits is red", "Select the option that is a prime number", "Pick the choice that represents a mammal", "Choose the correct answer to 2 + 2", "Which planet is closest to the Sun"],
             "closed-ended": ["On a scale of 1 to 5, how satisfied are you with our service", "Rate your agreement from 1 to 5 with the statement", "How likely are you to recommend our product from 1 to 5", "How would you rate your experience from 1 to 5", "Rate your knowledge level from 1 to 5"],
             "ranking": ["Please rank the following movies in order of preference", "Rank the cities by population size from largest to smallest", "Order the items by importance from most to least", "Rank the books in the order you read them", "Rank the colors by your favorite to least favorite"],
-            "hypothetical": ["What would you do if you won the lottery", "In a hypothetical scenario, how would you react if you met a celebrity", "Imagine a situation where you find a wallet on the street", "What would be your response if you saw a UFO", "If you could time travel, where and when would you go"],
+            "hypothetical": ["What would you do if you won an award", "In a hypothetical scenario, how would you react if you met a celebrity", "Imagine a situation where you find a wallet on the street", "What would be your response if you saw a UFO", "If you could time travel, where and when would you go"],
             "clarification": ["Could you please explain the concept of blockchain", "I need clarification on the fourth step of the process", "Can you provide more details about the theory of relativity", "Please explain the main idea of the book", "What is the meaning behind the artwork"],
             "leading": ["Don't you agree that exercise is important for a healthy lifestyle", "Isn't it true that honesty is the best policy", "Wouldn't you say that education is valuable", "Aren't you excited about the upcoming event", "Don't you think chocolate is delicious"],
             "critical-thinking": ["How would you solve the problem of climate change", "What are your thoughts on the impact of technology on society", "Can you critically analyze the economic implications of the policy", "What strategies would you use to improve customer satisfaction", "How do you propose to address the issue of poverty"],
-            "reflective": ["How do you feel about your recent achievements", "Share your reflections on the past year", "What are your sentiments regarding the current political situation", "Reflect on your experiences during the trip", "How do you perceive the concept of success"]
+            "reflective": ["How do you feel about your recent achievements", "Share your reflections on the past year", "What are your sentiments regarding the current political situation", "Reflect on your experiences during the trip", "How do you perceive the concept of success"],
+
+            # Additional types
+            "multiple-choice": ["Which of these is a fruit: Tomato, Potato, Broccoli", "Which planet is known as the Red Planet: Mars, Venus, Jupiter", "Who wrote 'Romeo and Juliet': Shakespeare, Dickens, Tolstoy", "Which gas is most abundant in Earth's atmosphere: Oxygen, Nitrogen, Carbon Dioxide", "What is the hardest natural substance: Diamond, Gold, Iron"],
+            "scale/rating": ["Rate the difficulty of this task from 1 to 10", "On a scale from 1 to 10, how likely would you recommend our app", "Rate your level of interest in art from 1 to 10", "How would you rate the customer service on a scale of 1 to 5", "Rate your understanding of the topic before and after the lecture from 1 to 5"],
+            "comparative": ["Which do you find more challenging: Math or English", "Compare your experience between online and offline shopping", "Which do you prefer: Working from home or office", "Compare the taste of apples and oranges", "Which is more beneficial: Regular exercise or a balanced diet"],
+            "cause and effect": ["What caused the extinction of dinosaurs", "What effects do you think social media has on teenagers", "What led to the rise of e-commerce", "How does pollution affect marine life", "What caused the global shift towards renewable energy sources"],
+            "problem-solving": ["How would you address internet privacy concerns", "What strategy would you use to improve literacy rates", "Suggest a solution for managing urban waste", "How would you enhance public transportation in cities", "Propose a method to reduce food waste in restaurants"],
+            "behavioral": ["Describe a time when you had to work under pressure", "Tell me about a challenge you faced at work and how you overcame it", "Can you discuss a time when you had to resolve a conflict", "Describe an instance where you had to learn something new quickly", "Tell us about a time you led a team to achieve a goal"],
+            "opinion/attitude": ["What is your stance on cloning technology", "What are your views on homeschooling", "What do you think about the impact of artificial intelligence on jobs", "What is your opinion on space exploration", "How do you feel about the current trends in fashion"],
+            "experience-based": ["Describe your most memorable travel experience", "Can you share an experience where you had to make a tough decision", "Talk about a significant learning experience in your life", "Share your experience with a recent technological gadget", "Discuss an event that significantly changed your perspective"],
+            "situational": ["If you were the CEO of a company, how would you increase profits", "In a situation where resources are limited, how would you prioritize tasks", "If you were stranded on an island, how would you survive", "If you were given a chance to change a decision you made, what would it be", "In a scenario where you have to work with a difficult colleague, how would you handle it"],
+            "demographic": ["What is your age group: Under 18, 18-24, 25-34, 35-44, 45+", "Specify your highest level of education: High School, Bachelor's, Master's, PhD", "Indicate your employment status: Employed, Unemployed, Student, Retired", "Select your field of work: Technology, Education, Healthcare, Business, Arts", "What is your marital status: Single, Married, Divorced, Widowed"],
+            "exploratory": ["What factors influence your buying decisions", "Explore the reasons behind the popularity of streaming services", "What motivates you to stay healthy and fit", "Explore the factors contributing to job satisfaction", "What drives the innovation in the smartphone industry"],
+            "diagnostic": ["Identify the reasons for the decline in sales last quarter", "Diagnose the root cause of the team's communication issues", "What factors are causing the delay in project delivery", "Diagnose the reasons behind the high employee turnover rate", "Identify the challenges in implementing the new software system"],
+            "sequential/process": ["Outline the steps involved in baking a cake", "Describe the process of photosynthesis in plants", "Explain the steps to resolve a customer complaint", "Detail the process of creating a mobile application", "Describe the sequence of events in a typical workday"]
         }
+
 
         # Check if the question_type is valid
         if question_type not in static_questions:
@@ -177,8 +202,6 @@ class PromptCompletionGenerator:
 
 
     def generate_prompt_completions(self, context_text: str, output_csv: str,
-                                    user_prompt: str = "",
-                                    openai_key: Optional[str] = None,
                                     temperature: float = 0.1, 
                                     model: str = "gpt-3.5-turbo-1106",
                                     max_tokens: int = 1054, 
@@ -244,17 +267,6 @@ class PromptCompletionGenerator:
         It is crucial to have proper API key authorization for successful API requests. Ensure the OpenAI key is valid and has the necessary permissions.
         """
 
-        # Attempt to get the API key from the function parameter or the environment variable
-        openai_api_key = openai_key if openai_key else os.environ["OPENAI_API_KEY"]
-
-        # Now check if the obtained key is valid
-        if not openai_api_key or not openai_api_key.startswith("sk-"):
-            logger.error("Invalid OpenAI API key. The key must start with 'sk-' and cannot be None.")
-            raise ValueError("Invalid OpenAI API key. The key must start with 'sk-' and cannot be None.")
-
-        # If the key is valid, set it
-        openai.api_key = openai_api_key
-
     
         # Customize the initial prompt based on the number and type of questions
         OUTPUT_FORMAT='[{"prompt": "question1", "completion": "answer1"}, {"prompt": "question1", "completion": "answer1"}]'
@@ -277,15 +289,11 @@ class PromptCompletionGenerator:
 
         retry_count = 0
 
-        # Configure the OpenAI client with retries and timeout settings
-        client = OpenAI(api_key=openai_api_key, max_retries=retry_limit)
-        client = client.with_options(timeout=httpx.Timeout(120.0, read=60.0, write=60.0, connect=10.0))
-
         while retry_count < retry_limit:
             try:
                 logger.debug(f"Attempting to generate prompt completions with params: \n")
 
-                response = client.chat.completions.create(
+                response = self.client.chat.completions.create(
                 model=model,
                 messages=[
                     {
@@ -317,7 +325,7 @@ class PromptCompletionGenerator:
                 logger.info(f"[generate_prompt_completions] Successfully parsed JSON response")
                 
                 # Save to CSV
-                list_to_save = [{"prompt": pair["prompt"], "completion": pair["completion"]} for pair in prompt_completion_pairs]
+                list_to_save = [{"prompt": pair["prompt"], "completion": pair["completion"], "question_type": question_type} for pair in prompt_completion_pairs]
                 self.data_formatter.list_to_csv(list_to_save, output_csv)
                 return self.data_formatter.remove_json_markers(json_string) # remove ```json and ``` from the string and return the json string
                 #else:
@@ -336,14 +344,14 @@ class PromptCompletionGenerator:
                 retry_count += 1            
                 logger.error(f"[generate_prompt_completions] Retry attempt {retry_count} due to an APIConnectionError error:\n{e}")
                 logger.error(f"[generate_prompt_completions] Retrying in 0.5 seconds...")
-                time.sleep(RETRY_SLEEP_SECONDS)
+                time.sleep(10)
 
             except openai.RateLimitError as e:
                 # If the request fails due to rate error limit, increment the retry counter, sleep for 0.5 seconds, and then try again
                 retry_count += 1
                 logger.error(f"[generate_prompt_completions] Retry attempt {retry_count} failed due to RateLimit Error {e}. Max tokens = {max_tokens}. Trying again in 0.5 seconds...")
                 max_tokens = int(max_tokens * 0.8)
-                time.sleep(RETRY_SLEEP_SECONDS)  # Pause for 0.5 seconds
+                time.sleep(10)  # Pause for 0.5 seconds
 
             except openai.APIStatusError as e:
                 retry_count += 1
@@ -374,3 +382,95 @@ class PromptCompletionGenerator:
         return self.data_formatter.remove_json_markers(json_string) # remove ```json and ``` from the string and return the json string
  
 
+    def create_dataset(self, context_filename: str, output_filename: str,
+                   temperature: float = 0.1, 
+                   model: str = "gpt-3.5-turbo-1106",
+                   max_tokens: int = 1054, 
+                   top_p: float = 1.0,
+                   frequency_penalty: float = 0.0, 
+                   presence_penalty: float = 0.0,
+                   retry_limit: int = 3,
+                   num_questions: int = 3, 
+                   question_types: List[str] = None,
+                   detailed_explanation: bool = True):
+        """
+        Generates a dataset with various types of questions based on the provided context.
+
+        Parameters:
+        ----------
+        context_filename : str
+            Path to the CSV file containing context data.
+        output_filename : str
+            Path to save the generated dataset.
+        temperature : float, optional
+            Controls randomness. Default is 0.1.
+        model : str, optional
+            The model to use. Default is "gpt-3.5-turbo-1106".
+        max_tokens : int, optional
+            Maximum length of the output. Default is 1054.
+        top_p : float, optional
+            Nucleus sampling parameter. Default is 1.0.
+        frequency_penalty : float, optional
+            Decrease in likelihood for used tokens. Default is 0.0.
+        presence_penalty : float, optional
+            Decrease in likelihood for current tokens. Default is 0.0.
+        retry_limit : int, optional
+            Maximum number of retries for API calls. Default is 3.
+        num_questions : int, optional
+            Number of questions to generate. Default is 3.
+        question_types : List[str], optional
+            Types of questions to generate. Default includes various types.
+        detailed_explanation : bool, optional
+            Whether to include detailed explanations. Default is True.
+
+        Example:
+        --------
+        >>> generator = YourClassName(api_key="your-api-key")
+        >>> generator.create_dataset(
+                context_filename="path/to/context.csv",
+                output_filename="path/to/generated_dataset.csv",
+                temperature=0.7,
+                model="gpt-3.5-turbo",
+                num_questions=5,
+                question_types=["open-ended", "yes-no"],
+                detailed_explanation=False
+            )
+        Generating open-ended questions for context at index 0
+        Results for open-ended: [Generated questions and answers]
+        Generating yes-no questions for context at index 0
+        Results for yes-no: [Generated questions and answers]
+
+        Notes:
+        -----
+        This method iterates over each row in the context CSV file and generates questions of specified types for each context.
+        The results are printed to the console and saved to the specified output CSV file.
+        """
+        # Implementation of the method...
+
+        
+        if question_types is None:
+            question_types = ["open-ended", "yes-no", "reflective", "closed-ended"]
+
+        context_df = self.context_extractor.from_csv_as_df(context_filename, encoding="utf-8")
+
+        for index, row in context_df.iterrows():
+            context = row['context']
+            for question_type in question_types:
+              try:
+                  print(f"Generating {question_type} questions for context at index {index}")
+                  questions = self.generate_prompt_completions( 
+                              context, output_filename,
+                              temperature=temperature,
+                              max_tokens=max_tokens,
+                              top_p=top_p,
+                              frequency_penalty=frequency_penalty,
+                              presence_penalty=presence_penalty,
+                              retry_limit=retry_limit,
+                              num_questions=num_questions,
+                              question_type=question_type,
+                              model=model,
+                              detailed_explanation=detailed_explanation
+                          )
+                  print(f'Results for {question_type}:', questions)
+              except Exception as e:
+                  print(f"Error: {e}")

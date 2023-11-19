@@ -23,10 +23,12 @@ logger = logging.getLogger(__name__)
 
 class LLMEvaluation ():
 
-    def __init__(self, model_name="gpt-3.5-turbo", openai_api_key=None, generator_system_prompt = None, eval_system_prompt=None, enable_timeouts= False, timeouts_options= None):
+    def __init__(self, model_name="gpt-3.5-turbo", openai_key=None, generator_system_prompt = None, eval_system_prompt=None, enable_timeouts= False, timeouts_options= None):
         self.model_name = model_name
-        self.openai_api_key = openai_api_key
-        self.client = OpenAI(api_key=self.openai_api_key, max_retries=3)
+        self.openai_api_key = openai_key if openai_key is not None else os.getenv("OPENAI_API_KEY")
+        if not self.openai_api_key or not self.openai_api_key.startswith("sk-"):
+            raise ValueError("Invalid OpenAI API key.")
+        self.client = OpenAI(api_key=self.openai_api_key, max_retries=3) 
         if enable_timeouts:
             if timeouts_options is None:
                 timeouts_options = {"total": 120, "read": 60.0, "write": 60.0, "connect": 10.0}

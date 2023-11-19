@@ -5,6 +5,7 @@ from typing import Union
 import os
 from typing import List, Dict
 import logging
+import httpx 
 
 # Read logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
@@ -19,8 +20,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class FineTuningAPI:
-    def __init__(self, api_key=None):
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+    def __init__(self, openai_key=None, enable_timeouts= False, timeouts_options= None):
+        self.openai_api_key = openai_key if openai_key is not None else os.getenv("OPENAI_API_KEY")
+        if not self.openai_api_key or not self.openai_api_key.startswith("sk-"):
+            raise ValueError("Invalid OpenAI API key.")
+        self.client = OpenAI(api_key=self.openai_api_key, max_retries=3)
+        if enable_timeouts:
+            if timeouts_options is None:
+                timeouts_options = {"total": 120, "read": 60.0, "write": 60.0, "connect": 10.0}
+                self.client = self.client.with_options(timeout=httpx.Timeout(120.0, read=60.0, write=60.0, connect=10.0))
+            else:
+                self.client = self.client.with_options(timeout=httpx.Timeout(timeouts_options["total"], timeouts_options["read"], timeouts_options["write"], timeouts_options["connect"]))
+        
 
     def create_fine_tune_file(self, file_path: str, purpose: Optional[str] = 'fine-tune') -> str:
         """
