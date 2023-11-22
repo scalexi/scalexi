@@ -532,7 +532,7 @@ class DataFormatter:
             # Running convert_llama2_instructions_to_prompt_completion will produce an output JSONL file containing:
             # {"prompt": "Explain what AI is.", "completion": "AI stands for Artificial Intelligence."}
         """
- 
+
         try:
             # Read the original records from the LLAMA2 format JSONL file
             llama2_records = []
