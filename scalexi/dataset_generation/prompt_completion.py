@@ -31,6 +31,36 @@ DEFAULT_SYSTEM_PROMPT = """You are an assistant to create a JSON Array of prompt
                                 """
 
 class PromptCompletionGenerator:
+    """
+    A class for generating prompt completions using the OpenAI API.
+
+    This class is designed to interact with the OpenAI API to generate responses based on provided prompts. 
+    It supports custom timeout settings and handles the API interactions to fetch prompt completions.
+
+    :method __init__: Initialize the PromptCompletionGenerator instance.
+    :type __init__: constructor
+
+    :param openai_key: An optional string representing the OpenAI API key. If not provided, the key is fetched from the environment variable "OPENAI_API_KEY".
+    :type openai_key: Optional[str], default=None
+    :param enable_timeouts: A flag to enable custom timeout settings for the OpenAI client.
+    :type enable_timeouts: bool, default=False
+    :param timeouts_options: A dictionary specifying the timeout settings. It is only used if enable_timeouts is set to True.
+    :type timeouts_options: Optional[dict], default=None
+
+    :return: An instance of PromptCompletionGenerator.
+    :rtype: PromptCompletionGenerator
+
+    :raises ValueError: Raised if the provided or fetched OpenAI API key is invalid.
+
+    :example:
+
+    ::
+
+        >>> generator = PromptCompletionGenerator(openai_key="sk-xxxxx")
+        >>> print(type(generator))
+        <class 'PromptCompletionGenerator'>
+    """
+
     def __init__(self, openai_key: Optional[str] = None, enable_timeouts= False, timeouts_options= None):
         # Set the OpenAI API key
         self.openai_api_key = openai_key if openai_key is not None else os.getenv("OPENAI_API_KEY")
@@ -63,27 +93,29 @@ class PromptCompletionGenerator:
     def parse_and_save_json(self, json_string, output_file, context=None):
         """
         Parses a JSON-formatted string and persists it to a file with optional context.
-        -------------------------------------------------------------------------------
 
-        This function offers a two-fold utility: it first parses a given JSON-formatted string, transforming it into a structured data format, and then saves it into a JSON file. Additionally, users have the option to provide contextual data, which, if given, will be incorporated into the saved data, enriching the content.
+        This function parses a given JSON-formatted string into structured data and saves it into a JSON file. 
+        It allows the inclusion of additional contextual data, enriching the content when provided.
 
-        Parameters:
-        ----------
-            json_string (str): 
-                A string formatted in JSON, representing structured data to be parsed.
-                
-            output_file (str): 
-                The destination file path where the parsed JSON data will be saved. 
-                
-            context (str, optional): 
-                If provided, this context will be added to the parsed data, augmenting the information. Defaults to None.
+        :param json_string: A string formatted in JSON, representing structured data to be parsed.
+        :type json_string: str
+        :param output_file: The destination file path where the parsed JSON data will be saved.
+        :type output_file: str
+        :param context: Optional context to be added to the parsed data, augmenting the information.
+        :type context: str, optional
 
-        Note:
-        -----
-            If the `context` is provided, it is essential that it aligns with the structure or schema of the JSON string for consistency in the output file.
+        :note: The `context` should align with the structure of the JSON string for consistency in the output file.
 
+        :example:
+
+        ::
+
+            >>> json_str = '[{"name": "Alice", "age": 25}, {"name": "Bob", "age": 30}]'
+            >>> output_path = 'output.json'
+            >>> context_info = 'Additional context information.'
+            >>> parse_and_save_json(json_str, output_path, context_info)
+            # This will parse the JSON string and save it to 'output.json' with additional context if provided.
         """
-
 
         try:
             # Load the JSON array into a list of dictionaries
@@ -110,25 +142,30 @@ class PromptCompletionGenerator:
 
     def generate_system_prompt(self, num_questions: int, question_type: str, detailed_explanation: bool = True):
         """
-        Generates a system prompt that includes instructions for the number of questions and their type.
-        
-        Parameters:
-        ----------
-        num_questions : int
-            The number of questions to be included in the prompt.
-        question_type : str
-            The type of questions, such as "open-ended", "yes/no", etc.
-        detailed_explanation : bool, optional
-            Flag indicating whether to include instructions for detailed explanations and arguments. Defaults to True.
+        Generates a system prompt including instructions for the number of questions and their type.
 
-        Returns:
-        -------
-        str
-            A string containing the generated system prompt.
+        This method creates a system prompt to guide the generation of questions of a specific type and quantity. 
+        It is useful for creating structured and targeted questions for AI model training or testing.
+
+        :param num_questions: The number of questions to be included in the prompt.
+        :type num_questions: int
+        :param question_type: The type of questions, such as 'open-ended', 'yes/no', etc.
+        :type question_type: str
+        :param detailed_explanation: Flag indicating whether to include instructions for detailed explanations and arguments. Defaults to True.
+        :type detailed_explanation: bool, optional
+
+        :return: A string containing the generated system prompt.
+        :rtype: str
+
+        :example:
+
+        ::
+
+            >>> generator = PromptCompletionGenerator(openai_key="sk-xxxxx")
+            >>> system_prompt = generator.generate_system_prompt(5, 'open-ended', True)
+            >>> print(system_prompt)
+            # Outputs a generated system prompt with guidelines for 5 open-ended questions.
         """
-    
-
-    
 
         # Define static questions for different question types
         static_questions = {
@@ -215,56 +252,60 @@ class PromptCompletionGenerator:
         """
         Generates prompt completions using the OpenAI API and records them to a CSV file.
 
-        This function utilizes the specified OpenAI model to generate responses based on provided context. 
-        It records the prompt-completion pairs to a CSV file for storage and further use. Customization options 
-        include the model, generation parameters, and the type of questions generated.
+        :method generate_prompt_completions: Use the OpenAI model to generate responses based on provided context and record the prompt-completion pairs in a CSV file.
+        :type generate_prompt_completions: method
 
-        Parameters:
-        ----------
-        context_text : str
-            The context based on which prompts are generated.
-        output_csv : str
-            The file path for saving generated completions in CSV format.
-        user_prompt : str, optional
-            A user-defined initial prompt. Defaults to an empty string.
-        openai_key : str, optional
-            The API key for authenticating requests to the OpenAI service. Defaults to None, using the environment variable "OPENAI_API_KEY".
-        temperature : float, optional
-            The level of randomness in the output. Higher values lead to more varied outputs. Defaults to 1.
-        model : str, optional
-            The OpenAI model used for generation. Defaults to "gpt-3.5-turbo-1106".
-        max_tokens : int, optional
-            The maximum length of the generated output. Defaults to 1054.
-        top_p : float, optional
-            The proportion of most likely tokens considered for sampling. Defaults to 1.
-        frequency_penalty : float, optional
-            The decrease in likelihood for frequently used tokens. Defaults to 0.
-        presence_penalty : float, optional
-            The decrease in likelihood for already used tokens. Defaults to 0.
-        retry_limit : int, optional
-            The maximum number of retries for API call failures. Defaults to 3.
-        num_questions : int, optional
-            The number of questions to generate. Defaults to 3.
-        question_type : str, optional
-            The type of questions to generate, such as "open-ended", "yes/no", etc. Defaults to "open-ended".
-        detailed_explanation : bool, optional
-            Flag indicating whether to include instructions for detailed explanations and arguments. Defaults to True.
+        :param context_text: The context based on which prompts are generated.
+        :type context_text: str
 
-        Returns:
-        -------
-        List[Dict[str, str]]:
-            A list of dictionaries, each containing 'prompt' and 'completion' keys.
+        :param output_csv: The file path for saving generated completions in CSV format.
+        :type output_csv: str
 
-        Raises:
-        ------
-        ValueError:
-            If the OpenAI API key is invalid or not provided.
-        Exception:
-            If the function fails after the specified number of retries.
+        :param temperature: The level of randomness in the output. Higher values lead to more varied outputs. Defaults to 0.1.
+        :type temperature: float, optional
 
-        Notes:
-        -----
-        It is crucial to have proper API key authorization for successful API requests. Ensure the OpenAI key is valid and has the necessary permissions.
+        :param model: The OpenAI model used for generation. Defaults to "gpt-3.5-turbo-1106".
+        :type model: str, optional
+
+        :param max_tokens: The maximum length of the generated output. Defaults to 1054.
+        :type max_tokens: int, optional
+
+        :param top_p: The proportion of most likely tokens considered for sampling. Defaults to 1.0.
+        :type top_p: float, optional
+
+        :param frequency_penalty: The decrease in likelihood for frequently used tokens. Defaults to 0.0.
+        :type frequency_penalty: float, optional
+
+        :param presence_penalty: The decrease in likelihood for already used tokens. Defaults to 0.0.
+        :type presence_penalty: float, optional
+
+        :param retry_limit: The maximum number of retries for API call failures. Defaults to 3.
+        :type retry_limit: int, optional
+
+        :param num_questions: The number of questions to generate. Defaults to 3.
+        :type num_questions: int, optional
+
+        :param question_type: The type of questions to generate, such as "open-ended", "yes/no", etc. Defaults to "open-ended".
+        :type question_type: str, optional
+
+        :param detailed_explanation: Flag indicating whether to include instructions for detailed explanations and arguments. Defaults to True.
+        :type detailed_explanation: bool, optional
+
+        :return: A list of dictionaries, each containing 'prompt' and 'completion' keys.
+        :rtype: List[Dict[str, str]]
+
+        :raises ValueError: If the OpenAI API key is invalid or not provided.
+        :raises Exception: If the function fails after the specified number of retries.
+
+        :example:
+
+        ::
+
+            >>> generate_prompt_completions("Discuss the impact of AI in healthcare.", "ai_healthcare.csv")
+            # Generates prompt completions based on the context about AI in healthcare and records them in 'ai_healthcare.csv'.
+
+        :notes:
+        - Proper API key authorization is essential for successful API requests. Ensure the OpenAI key is valid and has the necessary permissions.
         """
 
     
@@ -396,37 +437,52 @@ class PromptCompletionGenerator:
         """
         Generates a dataset with various types of questions based on the provided context.
 
-        Parameters:
-        ----------
-        context_filename : str
-            Path to the CSV file containing context data.
-        output_filename : str
-            Path to save the generated dataset.
-        temperature : float, optional
-            Controls randomness. Default is 0.1.
-        model : str, optional
-            The model to use. Default is "gpt-3.5-turbo-1106".
-        max_tokens : int, optional
-            Maximum length of the output. Default is 1054.
-        top_p : float, optional
-            Nucleus sampling parameter. Default is 1.0.
-        frequency_penalty : float, optional
-            Decrease in likelihood for used tokens. Default is 0.0.
-        presence_penalty : float, optional
-            Decrease in likelihood for current tokens. Default is 0.0.
-        retry_limit : int, optional
-            Maximum number of retries for API calls. Default is 3.
-        num_questions : int, optional
-            Number of questions to generate. Default is 3.
-        question_types : List[str], optional
-            Types of questions to generate. Default includes various types.
-        detailed_explanation : bool, optional
-            Whether to include detailed explanations. Default is True.
+        :method create_dataset: Create a dataset by generating questions of specified types for each context in the provided CSV file.
+        :type create_dataset: method
 
-        Example:
-        --------
-        >>> generator = YourClassName(api_key="your-api-key")
-        >>> generator.create_dataset(
+        :param context_filename: Path to the CSV file containing context data.
+        :type context_filename: str
+
+        :param output_filename: Path to save the generated dataset.
+        :type output_filename: str
+
+        :param temperature: Controls randomness in response generation. Defaults to 0.1.
+        :type temperature: float, optional
+
+        :param model: The OpenAI model to be used for generating responses. Defaults to "gpt-3.5-turbo-1106".
+        :type model: str, optional
+
+        :param max_tokens: Maximum length of the generated output. Defaults to 1054.
+        :type max_tokens: int, optional
+
+        :param top_p: Nucleus sampling parameter, controlling the range of tokens considered for generation. Defaults to 1.0.
+        :type top_p: float, optional
+
+        :param frequency_penalty: Decrease in likelihood for previously used tokens. Defaults to 0.0.
+        :type frequency_penalty: float, optional
+
+        :param presence_penalty: Decrease in likelihood for currently present tokens. Defaults to 0.0.
+        :type presence_penalty: float, optional
+
+        :param retry_limit: Maximum number of retries for API calls in case of failure. Defaults to 3.
+        :type retry_limit: int, optional
+
+        :param num_questions: Number of questions to generate for each context. Defaults to 3.
+        :type num_questions: int, optional
+
+        :param question_types: Types of questions to generate (e.g., "open-ended", "yes-no"). If not specified, defaults to various types.
+        :type question_types: List[str], optional
+
+        :param detailed_explanation: Flag to indicate whether to include detailed explanations in the generated content. Defaults to True.
+        :type detailed_explanation: bool, optional
+
+        :raises Exception: If an error occurs during question generation or file operations.
+
+        :example:
+
+        ::
+            >>> generator = PromptCompletionGenerator(openai_key="your-api-key")
+            >>> generator.create_dataset(
                 context_filename="path/to/context.csv",
                 output_filename="path/to/generated_dataset.csv",
                 temperature=0.7,
@@ -435,16 +491,12 @@ class PromptCompletionGenerator:
                 question_types=["open-ended", "yes-no"],
                 detailed_explanation=False
             )
-        Generating open-ended questions for context at index 0
-        Results for open-ended: [Generated questions and answers]
-        Generating yes-no questions for context at index 0
-        Results for yes-no: [Generated questions and answers]
+            # This example generates a dataset with specified question types based on the contexts from 'path/to/context.csv'.
 
-        Notes:
-        -----
-        This method iterates over each row in the context CSV file and generates questions of specified types for each context.
-        The results are printed to the console and saved to the specified output CSV file.
+        :notes:
+        - The method iterates over each row in the context CSV file, generating questions of specified types for each context. The generated questions and answers are saved to the output CSV file.
         """
+
         # Implementation of the method...
 
         

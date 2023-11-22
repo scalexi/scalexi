@@ -70,7 +70,7 @@ After installing `scalexi`, you can create a fine-tuning dataset for Large Langu
 
 ```python
 import os
-from scalexi.dataset_generation import PromptCompletionGenerator
+ from scalexi.dataset_generation.prompt_completion import PromptCompletionGenerator
 
 # Ensure your OpenAI API key is set as an environment variable
 os.environ['OPENAI_API_KEY'] = 'your-api-key-here'
@@ -83,8 +83,12 @@ context_file = 'path/to/your/context.csv'
 output_dataset_file = 'path/to/your/generated_dataset.csv'
 
 # Call the create_dataset method with your parameters
-generator.create_dataset(context_file, output_dataset_file, 
-                         num_questions=1, question_types=["yes-no", "open-ended", "reflective"])
+generator.create_dataset(context_file, output_dataset_file,
+                        num_questions=1, 
+                        question_types=["yes-no", "open-ended", "reflective"],
+                        model="gpt-3.5-turbo-1106",
+                        temperature=0.3,
+                        detailed_explanation=True)
 ```
 This script will generate a dataset with `'yes-no'`, `'open-ended'` and `'reflective'`, type questions based on the context provided in your CSV file.
 
@@ -210,7 +214,7 @@ Menu:
 Generate a random sample from your dataset for evaluation purposes.
 
 ```python
-from scalexi.llm_evaluation import LLMEvaluation
+from scalexi.llm_evaluation.evaluate import LLMEvaluation
 import os
 
 # Set your OpenAI API key as an environment variable
@@ -237,7 +241,7 @@ Improve your model's ability to generalize by rephrasing prompts and optionally 
 ```python
 # Rephrase prompts and classify them if needed
 rephrased_dataset_csv = output_folder + 'rephrased_dataset.csv'
-llm_evaluation.process_and_classify_prompts(output_file, rephrased_dataset_csv, 
+llm_evaluation.rephrase_and_classify_prompts_in_dataset(output_file, rephrased_dataset_csv, 
                                             classify=True, 
                                             classes=['ACADEMIC', 'RESEARCH', 'ADMIN', 'SCIENCE', 'OTHERS'])
 ```

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 scalexi/docs/
+scalexi/docs_material/
 # C extensions
 *.so
 *.sh 

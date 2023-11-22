@@ -20,6 +20,19 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class FineTuningAPI:
+    """
+    A class to interact with the OpenAI API, specifically for fine-tuning operations.
+
+    This class initializes a client for the OpenAI API, handling the API key validation and configuring timeout options for the API requests. It is designed to work with fine-tuning tasks, providing an interface to interact with OpenAI's fine-tuning capabilities.
+
+    :param openai_key: The OpenAI API key. If not provided, it defaults to the value set in the environment variable 'OPENAI_API_KEY', optional
+    :type openai_key: str, optional
+    :param enable_timeouts: Flag to enable custom timeout settings for API requests. If False, default timeout settings are used, defaults to False
+    :type enable_timeouts: bool, optional
+    :param timeouts_options: A dictionary specifying custom timeout settings. Required if 'enable_timeouts' is True. It should contain keys 'total', 'read', 'write', and 'connect' with corresponding timeout values in seconds, optional
+    :type timeouts_options: dict, optional
+    :raises ValueError: If no valid OpenAI API key is provided or found in the environment variable
+    """
     def __init__(self, openai_key=None, enable_timeouts= False, timeouts_options= None):
         self.openai_api_key = openai_key if openai_key is not None else os.getenv("OPENAI_API_KEY")
         if not self.openai_api_key or not self.openai_api_key.startswith("sk-"):
@@ -35,39 +48,30 @@ class FineTuningAPI:
 
     def create_fine_tune_file(self, file_path: str, purpose: Optional[str] = 'fine-tune') -> str:
         """
-        Create a fine-tuning file in the OpenAI system using the updated API client.
+        Uploads a specified file to OpenAI for fine-tuning purposes and returns the file's identifier.
 
-        This method uploads a file to OpenAI for the purpose of fine-tuning a language model.
-        It accepts a file path and the purpose of the file upload, then returns the ID of the
-        created file. It handles exceptions related to file operations and API errors.
+        This method is integral for preparing datasets for language model fine-tuning on OpenAI's platform.
+        It takes a local file path, uploads the file, and returns the unique identifier of the uploaded file.
+        The method is robust, encapsulating error handling for file accessibility and API interaction issues.
 
-        Parameters
-        ----------
-        file_path : str
-            The path to the JSONL file to be uploaded for fine-tuning.
-        purpose : str, optional
-            The purpose of the file upload. Default is 'fine-tune'.
+        :param file_path: Absolute or relative path to the JSONL file designated for fine-tuning.
+        :type file_path: str
+        :param purpose: Intended use of the uploaded file, influencing how OpenAI processes the file. Defaults to 'fine-tune'.
+        :type purpose: str, optional
+        :return: Unique identifier of the uploaded file, typically used for subsequent API interactions.
+        :rtype: str
+        :raises FileNotFoundError: Raised when the specified file_path does not point to an existing file.
+        :raises PermissionError: Raised when access to the specified file is restricted due to insufficient permissions.
+        :raises Exception: Generic exception for capturing and signaling failures during the API upload process.
 
-        Returns
-        -------
-        str
-            The ID of the created fine-tuning file.
+        :example:
 
-        Raises
-        ------
-        FileNotFoundError
-            If the file at the given file_path does not exist.
-        PermissionError
-            If there is a permission error while accessing the file.
-        Exception
-            If an error occurs during the file upload to OpenAI.
+        ::
 
-        Examples
-        --------
-        >>> api = FineTuningAPI(api_key="your-api-key")
-        >>> file_id = api.create_fine_tune_file("path/to/dataset.jsonl")
+        >>> api = FineTuningAPI(api_key="sk-your-api-key")
+        >>> file_id = api.create_fine_tune_file("/path/to/your/dataset.jsonl")
         >>> print(file_id)
-        'file-LMfxRAZ6cAHxp5KLRXZySlOR'
+        >>> >'file-xxxxxxxxxxxxxxxxxxxxx'
         """
         try:
             with open(file_path, "rb") as file_data:
@@ -95,52 +99,55 @@ class FineTuningAPI:
         """
         Start a fine-tuning job using the OpenAI Python SDK.
 
-        This method initiates a fine-tuning job with the specified model and training file.
-        Additional parameters like batch size, learning rate multiplier, number of epochs,
-        and validation file can be customized.
+        This method initiates a fine-tuning job with the specified model and training file. It allows customization of additional parameters such as batch size, learning rate multiplier, number of epochs, and the validation file.
 
-        Parameters
-        ----------
-        training_file : str
-            The file ID of the training data uploaded to OpenAI API.
-        model : str
-            The name of the model to fine-tune.
-        suffix : str, optional
-            A suffix to append to the fine-tuned model's name. Default is None.
-        batch_size : str or int, optional
-            Number of examples in each batch. Defaults to 'auto'.
-        learning_rate_multiplier : str or float, optional
-            Scaling factor for the learning rate. Defaults to 'auto'.
-        n_epochs : str or int, optional
-            The number of epochs to train the model for. Defaults to 'auto'.
-        validation_file : str, optional
-            The file ID of the validation data uploaded to OpenAI API. Default is None.
+        :method create_fine_tuning_job: Initiates a fine-tuning job for a model.
+        :type create_fine_tuning_job: function
 
-        Returns
-        -------
-        dict
-            A dictionary containing information about the fine-tuning job, including its ID.
+        :param training_file: The file ID of the training data uploaded to OpenAI API.
+        :type training_file: str
 
-        Raises
-        ------
-        ValueError
-            If the training_file is not provided.
-        Exception
-            If an error occurs during the creation of the fine-tuning job.
+        :param model: The name of the model to fine-tune.
+        :type model: str
 
-        Examples
-        --------
-        >>> api = FineTuningAPI(api_key="your-api-key")
-        >>> job_info = api.create_fine_tuning_job(training_file="file-abc123", 
-                                                  model="gpt-3.5-turbo",
-                                                  suffix="custom-model-name",
-                                                  batch_size=4,
-                                                  learning_rate_multiplier=0.1,
-                                                  n_epochs=2,
-                                                  validation_file="file-def456")
-        >>> print(job_info)
-        {'id': 'ft-xyz789', ...}
+        :param suffix: A suffix to append to the fine-tuned model's name, optional.
+        :type suffix: str, optional
+
+        :param batch_size: Number of examples in each batch, can be a specific number or 'auto', optional.
+        :type batch_size: str or int, optional
+
+        :param learning_rate_multiplier: Scaling factor for the learning rate, can be a specific number or 'auto', optional.
+        :type learning_rate_multiplier: str or float, optional
+
+        :param n_epochs: The number of epochs to train the model for, can be a specific number or 'auto', optional.
+        :type n_epochs: str or int, optional
+
+        :param validation_file: The file ID of the validation data uploaded to OpenAI API, optional.
+        :type validation_file: str, optional
+
+        :return: A dictionary containing information about the fine-tuning job, including its ID.
+        :rtype: dict
+
+        :raises ValueError: If the training_file is not provided.
+        :raises Exception: If an error occurs during the creation of the fine-tuning job.
+ 
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> job_info = api.create_fine_tuning_job(training_file="file-abc123", 
+                                                    model="gpt-3.5-turbo",
+                                                    suffix="custom-model-name",
+                                                    batch_size=4,
+                                                    learning_rate_multiplier=0.1,
+                                                    n_epochs=2,
+                                                    validation_file="file-def456")
+            >>> print(job_info)
+            {'id': 'ft-xyz789', ...}
         """
+
         if not training_file:
             raise ValueError("A training_file must be provided to start a fine-tuning job.")
 
@@ -169,21 +176,30 @@ class FineTuningAPI:
         """
         List the fine-tuning jobs with an option to limit the number of jobs returned.
 
-        Parameters
-        ----------
-        limit : int, optional
-            The maximum number of fine-tuning jobs to return. Default is 10.
+        This method retrieves a list of fine-tuning jobs. An optional parameter 'limit' can be set to restrict the number of jobs returned. It interacts with the OpenAI API and processes the response to provide a concise list of fine-tuning jobs.
 
-        Returns
-        -------
-        List[Dict]
-            A list of dictionaries, each representing a fine-tuning job.
+        :method list_fine_tuning_jobs: Retrieves a list of fine-tuning jobs.
+        :type list_fine_tuning_jobs: function
 
-        Raises
-        ------
-        openai.error.OpenAIError
-            If an error occurs with the OpenAI API request.
+        :param limit: The maximum number of fine-tuning jobs to return, defaults to 10.
+        :type limit: int, optional
+
+        :return: A list of dictionaries, each representing a fine-tuning job.
+        :rtype: List[Dict]
+
+        :raises openai.error.OpenAIError: If an error occurs with the OpenAI API request.
+
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> jobs = api.list_fine_tuning_jobs(limit=5)
+            >>> for job in jobs:
+            >>>     print(job)
         """
+
         try:
             response = self.client.fine_tuning.jobs.list(limit=limit)
             return response.data
@@ -194,23 +210,30 @@ class FineTuningAPI:
         """
         Retrieve the state of a specific fine-tuning job.
 
-        Parameters
-        ----------
-        job_id : str
-            The ID of the fine-tuning job to retrieve.
+        This method is used to obtain detailed information about a specific fine-tuning job, identified by its job ID. It interacts with the OpenAI API to retrieve and present the state and other relevant details of the requested fine-tuning job.
 
-        Returns
-        -------
-        Dict
-            A dictionary containing details about the fine-tuning job.
+        :method retrieve_fine_tuning_job: Retrieves details of a specific fine-tuning job.
+        :type retrieve_fine_tuning_job: function
 
-        Raises
-        ------
-        ValueError
-            If the job_id is not provided.
-        openai.error.OpenAIError
-            If an error occurs with the OpenAI API request.
+        :param job_id: The ID of the fine-tuning job to retrieve.
+        :type job_id: str
+
+        :return: A dictionary containing details about the fine-tuning job.
+        :rtype: Dict
+
+        :raises ValueError: If the job_id is not provided.
+        :raises openai.error.OpenAIError: If an error occurs with the OpenAI API request.
+
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> job_details = api.retrieve_fine_tuning_job(job_id="ft-xyz789")
+            >>> print(job_details)
         """
+
         if not job_id:
             raise ValueError("A job_id must be provided.")
 
@@ -241,23 +264,34 @@ class FineTuningAPI:
         """
         Cancel a specific fine-tuning job.
 
-        Parameters
-        ----------
-        job_id : str
-            The ID of the fine-tuning job to cancel.
+        This method allows for the cancellation of a fine-tuning job identified by its job ID. It interacts with the OpenAI API to send a cancellation request and handles various potential errors that might occur during this process.
 
-        Returns
-        -------
-        Dict
-            Confirmation of the cancellation.
+        :method cancel_fine_tuning_job: Cancels a fine-tuning job.
+        :type cancel_fine_tuning_job: function
 
-        Raises
-        ------
-        ValueError
-            If the job_id is not provided.
-        openai.error.OpenAIError
-            If an error occurs with the OpenAI API request.
+        :param job_id: The ID of the fine-tuning job to cancel.
+        :type job_id: str
+
+        :return: Confirmation of the cancellation.
+        :rtype: Dict
+
+        :raises ValueError: If the job_id is not provided.
+        :raises openai.APIConnectionError: If there's a connection error with the API.
+        :raises openai.RateLimitError: If the request is rate-limited by the API.
+        :raises openai.APIStatusError: If there's a status error from the API.
+        :raises AttributeError: If an attribute error occurs during the process.
+        :raises Exception: For any other exceptions that occur during the cancellation process.
+
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> cancellation_result = api.cancel_fine_tuning_job(job_id="ft-xyz789")
+            >>> print(cancellation_result)
         """
+
         if not job_id:
             raise ValueError("A job_id must be provided.")
 
@@ -289,26 +323,27 @@ class FineTuningAPI:
         """
         List files that have been uploaded to OpenAI for fine-tuning.
 
-        This method retrieves a list of files uploaded to the OpenAI API, typically for the purpose
-        of fine-tuning. The list includes details such as file IDs, created dates, and file purposes.
+        This method allows the retrieval of a list of files uploaded to the OpenAI API, primarily for the purpose of fine-tuning models. The list includes comprehensive details such as file IDs, creation dates, and the purposes of the files.
 
-        Returns
-        -------
-        List[Dict]
-            A list of dictionaries, each containing details of an uploaded file.
+        :method list_fine_tune_files: Retrieves a list of uploaded files for fine-tuning.
+        :type list_fine_tune_files: function
 
-        Raises
-        ------
-        Exception
-            If an error occurs during the API request.
+        :return: A list of dictionaries, each containing details of an uploaded file.
+        :rtype: List[Dict]
 
-        Examples
-        --------
-        >>> api = FineTuningAPI(api_key="your-api-key")
-        >>> files = api.list_uploaded_files()
-        >>> for file in files:
-        >>>     print(file)
+        :raises Exception: If an error occurs during the API request.
+
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> files = api.list_fine_tune_files()
+            >>> for file in files:
+            >>>     print(file)
         """
+
         try:
             response = self.client.files.list()
             return response.data
@@ -320,25 +355,38 @@ class FineTuningAPI:
         """
         List up to a specified number of events from a fine-tuning job.
 
-        Parameters
-        ----------
-        fine_tuning_job_id : str
-            The ID of the fine-tuning job to list events from.
-        limit : int, optional
-            The maximum number of events to return. Default is 10.
+        This method retrieves a list of events associated with a specific fine-tuning job, identified by its job ID. It allows setting a limit on the number of events to be returned and handles various potential errors that might occur during the API interaction.
 
-        Returns
-        -------
-        List[Dict]
-            A list of dictionaries, each representing an event from the fine-tuning job.
+        :method list_events_fine_tuning_job: Retrieves a list of events from a specified fine-tuning job.
+        :type list_events_fine_tuning_job: function
 
-        Raises
-        ------
-        ValueError
-            If the fine_tuning_job_id is not provided.
-        openai.error.OpenAIError
-            If an error occurs with the OpenAI API request.
+        :param fine_tuning_job_id: The ID of the fine-tuning job to list events from.
+        :type fine_tuning_job_id: str
+
+        :param limit: The maximum number of events to return, defaults to 10.
+        :type limit: int, optional
+
+        :return: A list of dictionaries, each representing an event from the fine-tuning job.
+        :rtype: List[Dict]
+
+        :raises ValueError: If the fine_tuning_job_id is not provided.  
+        :raises openai.APIConnectionError: If there's a connection error with the API.
+        :raises openai.RateLimitError: If the request is rate-limited by the API.
+        :raises openai.APIStatusError: If there's a status error from the API.
+        :raises AttributeError: If an attribute error occurs during the process.
+        :raises Exception: For any other exceptions that occur during the process.
+
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> events = api.list_events_fine_tuning_job(fine_tuning_job_id="ft-xyz789", limit=5)
+            >>> for event in events:
+            >>>     print(event)
         """
+
         if not fine_tuning_job_id:
             raise ValueError("A fine_tuning_job_id must be provided.")
 
@@ -369,23 +417,33 @@ class FineTuningAPI:
         """
         Delete a fine-tuned model. The caller must be the owner of the organization the model was created in.
 
-        Parameters
-        ----------
-        model_id : str
-            The ID of the fine-tuned model to delete.
+        This method facilitates the deletion of a fine-tuned model identified by its model ID. It manages the API interaction to delete the model and handles various potential errors that might occur during this process.
 
-        Returns
-        -------
-        Dict
-            Confirmation of the deletion.
+        :method delete_fine_tuned_model: Deletes a fine-tuned model.
+        :type delete_fine_tuned_model: function
 
-        Raises
-        ------
-        ValueError
-            If the model_id is not provided.
-        openai.error.OpenAIError
-            If an error occurs with the OpenAI API request.
+        :param model_id: The ID of the fine-tuned model to delete.
+        :type model_id: str
+
+        :return: Confirmation of the deletion.
+        :rtype: Dict
+
+        :raises ValueError: If the model_id is not provided.
+        :raises openai.APIConnectionError: If there's a connection error with the API.
+        :raises openai.RateLimitError: If the request is rate-limited by the API.
+        :raises openai.APIStatusError: If there's a status error from the API.
+        :raises AttributeError: If an attribute error occurs during the process.
+        :raises Exception: For any other exceptions that occur during the process.
+
+        :example:
+
+        ::
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> deletion_result = api.delete_fine_tuned_model(model_id="ft-model-12345")
+            >>> print(deletion_result)
         """
+
         if not model_id:
             raise ValueError("A model_id must be provided.")
 
@@ -412,40 +470,41 @@ class FineTuningAPI:
 
     def use_fine_tuned_model(self, model_name: str, user_prompt:str, system_prompt="You are a helpful assistant." ) -> str:
         """
-        Use a fine-tuned model to generate responses based on provided messages.
+        This method enables interaction with a fine-tuned model to generate responses based on provided messages.
 
-        This method allows for interaction with a fine-tuned model. It sends messages to the model
-        and retrieves the generated response. The model should be available for inference after the
-        fine-tuning job is completed.
+        :method use_fine_tuned_model: Uses a specified fine-tuned model to generate responses to messages.
+        :type use_fine_tuned_model: function
 
-        Parameters
-        ----------
-        model_name : str
-            The name of the fine-tuned model to be used for generating responses.
-        messages : List[Dict]
-            A list of message dictionaries. Each message should have 'role' and 'content' keys.
+        :param model_name: The name of the fine-tuned model used for generating responses.
+        :type model_name: str
 
-        Returns
-        -------
-        str
-            The generated response from the fine-tuned model.
+        :param user_prompt: The user's message prompt for the model.
+        :type user_prompt: str
 
-        Raises
-        ------
-        Exception
-            If an error occurs during the API request or while processing the response.
+        :param system_prompt: A predefined system message prompt, defaulting to "You are a helpful assistant."
+        :type system_prompt: str, optional
 
-        Examples
-        --------
-        >>> api = FineTuningAPI(api_key="your-api-key")
-        >>> response = api.use_fine_tuned_model(
-            "ft:gpt-3.5-turbo:my-org:custom_suffix:id", 
-            [{"role": "system", "content": "You are a helpful assistant."}, 
-            {"role": "user", "content": "Hello!"}]
-        )
-        >>> print(response)
-        'Response from the model...'
+        :return: The response generated by the fine-tuned model.
+        :rtype: str
+
+        :raises Exception: If an error occurs during the API request or while processing the response.
+
+        :example:
+
+        ::
+
+
+            >>> api = FineTuningAPI(api_key="your-api-key")
+            >>> response = api.use_fine_tuned_model(
+                "ft:gpt-3.5-turbo:my-org:custom_suffix:id", 
+                user_prompt="Hello!",
+                system_prompt="You are a helpful assistant."
+            )
+            >>> print(response)
+            'Response from the model...'
         """
+
+
         try:
             response = self.client.chat.completions.create(
                 model=model_name,
@@ -475,18 +534,59 @@ class FineTuningAPI:
 
     def run_dashboard(self):
         """
-        Run a fine-tuning dashboard with various operations.
+        This method runs a dashboard for various fine-tuning operations related to a model.
 
-        This method presents a menu to the user and allows them to choose from various
-        fine-tuning-related operations, such as creating a fine-tune file, starting a
-        fine-tuning job, listing fine-tuning jobs, retrieving job states, canceling jobs,
-        listing events from a job, deleting fine-tuned models, and exiting the dashboard.
+        :method run_dashboard: Launches an interactive dashboard allowing the user to perform various operations related to fine-tuning a model.
+        :type run_dashboard: function
 
-        Returns
-        -------
-        None
+        :choice: User's choice from the dashboard menu for different operations.
+        :type choice: str
 
+        :file_path: File path for creating a fine-tune file.
+        :type file_path: str, optional
+
+        :purpose: Purpose of the file, either for fine-tuning or other purposes.
+        :type purpose: str, optional
+
+        :training_file: ID of the training file used for creating a fine-tuning job.
+        :type training_file: str, optional
+
+        :model: Name of the model used for fine-tuning.
+        :type model: str, optional
+
+        :suffix: Suffix for the fine-tuned model name.
+        :type suffix: str, optional
+
+        :batch_size: Batch size for training, either automatic or a specific number.
+        :type batch_size: str, optional
+
+        :learning_rate_multiplier: Learning rate multiplier, either automatic or a specific number.
+        :type learning_rate_multiplier: str, optional
+
+        :n_epochs: Number of epochs for training, either automatic or a specific number.
+        :type n_epochs: str, optional
+
+        :validation_file: ID of the validation file, if provided.
+        :type validation_file: str, optional
+
+        :job_id: ID of the fine-tuning job for retrieving state, cancelling, or listing events.
+        :type job_id: str, optional
+
+        :model_name: Name of the fine-tuned model for usage.
+        :type model_name: str, optional
+
+        :user_prompt: User prompt for testing the fine-tuned model.
+        :type user_prompt: str, optional
+
+        :system_prompt: System prompt for testing the fine-tuned model.
+        :type system_prompt: str, optional
+
+        :model_id: ID of the fine-tuned model to be deleted.
+        :type model_id: str, optional
+
+        :return: None
         """
+
         while True:
             print("\nMenu:")
             print("1. Create a fine-tune file")

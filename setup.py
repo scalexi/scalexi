@@ -259,7 +259,7 @@ Improve your model's ability to generalize by rephrasing prompts and optionally 
 ```python
 # Rephrase prompts and classify them if needed
 rephrased_dataset_csv = output_folder + 'rephrased_dataset.csv'
-llm_evaluation.process_and_classify_prompts(output_file, rephrased_dataset_csv, 
+llm_evaluation.rephrase_and_classify_prompts_in_dataset(output_file, rephrased_dataset_csv, 
                                             classify=True, 
                                             classes=['ACADEMIC', 'RESEARCH', 'ADMIN', 'SCIENCE', 'OTHERS'])
 ```

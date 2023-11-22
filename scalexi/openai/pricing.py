@@ -17,85 +17,61 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class OpenAIPricing:
+
     """
-    A class for handling and accessing pricing data for various OpenAI models.
+    A class dedicated to handling and accessing OpenAI's pricing data for various models and services.
 
-    This class allows easy access to pricing information for different categories and models
-    as provided by OpenAI. The data is expected to be a dictionary obtained from parsing
-    a JSON structure with specific keys representing different aspects of the pricing.
+    This class simplifies the process of accessing detailed pricing information for OpenAI's diverse range of models, 
+    including language models, assistants API, fine-tuning models, embedding models, base models, image models, and audio models.
 
-    The expected JSON structure is as follows:
-    - release_date: A string representing the release date of the pricing data.
-    - pricing: A nested dictionary containing various categories of pricing information:
-        - language_models: Contains pricing information for different language models, structured as:
-            - Model Category (e.g., "GPT-4 Turbo"): A dictionary containing:
-                - context: A description of the model's capabilities.
-                - models: A nested dictionary of specific model configurations, each with:
-                    - Model Name (e.g., "gpt-4-1106-preview"): A dictionary containing:
-                        - input: Cost per 1K tokens for inputs.
-                        - output: Cost per 1K tokens for outputs.
-        - assistants_api: Contains pricing information for assistants API tools, structured as:
-            - Tool Name (e.g., "Code interpreter"): A dictionary containing:
-                - input: Cost per session or usage.
-                - note: Additional notes, such as free usage periods.
-        - fine_tuning_models: Contains pricing for fine-tuning models, structured as:
-            - Model Name (e.g., "gpt-3.5-turbo"): A dictionary containing:
-                - training: Cost per 1K tokens for training.
-                - input_usage: Cost per 1K tokens for input during inference.
-                - output_usage: Cost per 1K tokens for output during inference.
-        - embedding_models: Contains pricing for embedding models, structured as:
-            - Model Name (e.g., "ada v2"): A dictionary containing:
-                - usage: Cost per 1K tokens for usage.
-        - base_models: Contains pricing for base models, structured as:
-            - Model Name (e.g., "davinci-002"): A dictionary containing:
-                - usage: Cost per 1K tokens for usage.
-        - image_models: Contains pricing for image models, structured as:
-            - Model Category (e.g., "DALL·E 3"): A dictionary containing:
-                - Quality Level (e.g., "Standard"): A dictionary of resolutions and their prices:
-                    - Resolution (e.g., "1024x1024"): Price per image.
-        - audio_models: Contains pricing for audio models, structured as:
-            - Model Name (e.g., "Whisper"): A dictionary containing:
-                - usage: Cost per minute or per character for usage.
+    The pricing data is structured as follows:
 
-    Parameters:
-    - json_data (dict): The pricing data in JSON format, parsed into a dictionary.
+        - Language Models: Pricing for various language models like GPT-4, GPT-3.5, etc., including input and output token costs.
+        
+        - Assistants API: Pricing for tools such as Code Interpreter and Retrieval, including cost per session and any special notes.
+        
+        - Fine Tuning Models: Costs associated with training and input/output usage for models like gpt-3.5-turbo and davinci-002.
+        
+        - Embedding Models: Usage costs for models such as ada v2.
+        
+        - Base Models: Token usage costs for base models like davinci-002 and babbage-002.
+        
+        - Image Models: Pricing for different resolutions and quality levels in image models like DALL·E 3 and DALL·E 2.
+        
+        - Audio Models: Usage costs for models like Whisper and Text-To-Speech (TTS) models.
 
-    Attributes:
-    - data (dict): The parsed JSON data as a dictionary accessible to the instance.
+    This information provides a comprehensive overview of the pricing structure, aiding users in making informed decisions based on their specific needs.
 
-    Methods:
-    - get_release_date(): Returns the release date of the pricing data.
-    - get_language_model_pricing(model_name=None): Returns pricing information for specified language models.
-    - get_assistants_api_pricing(tool_name=None): Returns pricing information for the assistants API tools.
-    - get_fine_tuning_model_pricing(model_name=None): Returns pricing information for fine-tuning models.
-    - get_embedding_model_pricing(model_name=None): Returns pricing information for embedding models.
-    - get_base_model_pricing(model_name=None): Returns pricing information for base models.
-    - get_image_model_pricing(model_name=None): Returns pricing information for image models.
-    - get_audio_model_pricing(model_name=None): Returns pricing information for audio models.
+    :method __init__: Initialize the OpenAIPricing instance with JSON-formatted pricing data.
+    :type __init__: constructor
 
-    Example JSON data input:
-    {
-        "release_date": "2023-11-15",
-        "pricing": {
-            "language_models": {
-                "GPT-4 Turbo": {
-                    "context": "128k context, fresher knowledge ...",
-                    "models": {
-                        "gpt-4-1106-preview": { "input": 0.01, "output": 0.03 },
-                        ...
+    :param json_data: The JSON data containing the pricing information of OpenAI models and services.
+    :type json_data: dict
+
+    :return: An instance of OpenAIPricing with parsed pricing data.
+    :rtype: OpenAIPricing
+
+    :example:
+
+    ::
+
+        >>> json_data = {
+                "release_date": "2023-11-15",
+                "pricing": {
+                    "language_models": {
+                        "GPT-4 Turbo": {
+                            "context": "128k context, fresher knowledge ...",
+                            "models": {
+                                "gpt-4-1106-preview": {"input": 0.01, "output": 0.03}
+                            }
+                        }
                     }
-                },
-                ...
-            },
-            ...
-        }
-    }
-
-    Each 'get' method can optionally take a model or tool name as an argument. If provided,
-    it will return the specific pricing data for that name. If not provided, it returns the
-    entire category of pricing data.
+                }
+            }
+        >>> pricing = OpenAIPricing(json_data=json_data)
+        >>> print(type(pricing))
+        <class 'OpenAIPricing'>
     """
-    # Class implementation...
 
     def __init__(self, json_data: dict):
         """
@@ -118,26 +94,28 @@ class OpenAIPricing:
 
     def get_language_model_pricing(self, model_name=None):
         """
-        Retrieves the pricing information for language models from the stored pricing data.
+        Retrieves pricing information for language models based on the provided model name.
 
-        If a specific model name is provided, this method returns the pricing details for that
-        particular language model. If no model name is given, it returns the pricing information
-        for all language models in a dictionary.
+        This method accesses the stored pricing data to return details for a specific language model or for all language models. 
+        If a model name is specified, it fetches pricing for that particular model. 
+        If no model name is given, it returns comprehensive pricing details for all language models.
 
-        Parameters:
-            model_name (str, optional): The name of the specific language model to retrieve pricing
-                                        for. If None, returns all language models' pricing info.
+        :param model_name: The name of a specific language model for which pricing information is required. 
+                        If None, pricing information for all language models is returned.
+        :type model_name: Optional[str]
 
-        Returns:
-            dict: A dictionary containing the pricing information. If a specific model name is given,
-                the dictionary contains keys 'input' and 'output' with respective costs. If no model
-                name is provided, returns a dictionary with model categories as keys and their
-                respective pricing dictionaries as values.
+        :return: A dictionary containing the pricing information. If a specific model name is provided, 
+                it returns a dictionary with 'input' and 'output' costs. Otherwise, it returns a dictionary 
+                with each model category as keys and their respective pricing information as values.
+        :rtype: dict
 
-        Raises:
-            ValueError: If a specific model_name is provided but not found in the pricing data.
+        :raises ValueError: If a specified model_name is not found in the stored language models pricing data.
 
-        Example:
+        :example:
+
+        ::
+
+            >>> pricing_data = OpenAIPricing(json_data)
             >>> pricing_data.get_language_model_pricing('GPT-4')
             {'input': 0.03, 'output': 0.06}
         """
@@ -154,27 +132,28 @@ class OpenAIPricing:
         """
         Retrieves pricing information for the Assistants API tools from the stored pricing data.
 
-        If a specific tool name is provided, this method returns the pricing details for that
-        particular tool. If no tool name is given, it returns the pricing information for all
-        tools under the Assistants API in a dictionary.
+        This method provides the ability to access pricing details for specific tools or all tools within the Assistants API category. 
+        When a specific tool name is provided, it returns the pricing for that tool. If no tool name is specified, 
+        the method returns pricing information for all tools under the Assistants API.
 
         Parameters:
-            tool_name (str, optional): The name of the specific Assistants API tool to retrieve
-                                    pricing for. If None, returns all tools' pricing info.
+            tool_name (str, optional): The name of the specific Assistants API tool for which pricing 
+                                    information is required. If None, returns pricing for all tools.
 
         Returns:
-            dict: A dictionary containing the pricing information. If a specific tool name is given,
-                the dictionary contains the tool's cost and any additional notes. If no tool name
-                is provided, returns a dictionary with tool names as keys and their respective
-                pricing dictionaries as values.
+            dict: A dictionary containing the pricing information. If a specific tool name is given, 
+                the dictionary includes the tool's cost and any additional notes. If no tool name 
+                is specified, it returns a dictionary with tool names as keys and their respective 
+                pricing information as values.
 
         Raises:
-            ValueError: If a specific tool_name is provided but not found in the pricing data.
+            ValueError: If a specific tool_name is provided but not found in the Assistants API pricing data.
 
         Example:
             >>> pricing_data.get_assistants_api_pricing('Code interpreter')
             {'input': 0.03, 'note': 'Free until 11/17/2023'}
         """
+
         tools = self.data["pricing"]["assistants_api"]
         if tool_name:
             if tool_name in tools:
@@ -189,30 +168,30 @@ class OpenAIPricing:
         """
         Retrieves pricing information for fine-tuning models from the stored pricing data.
 
-        This method can be used to retrieve the cost of training, input usage, and output usage
-        for a specific fine-tuning model if the model name is provided. If no model name is
-        provided, it returns a dictionary of all available fine-tuning models with their
-        respective pricing information.
+        This method is designed to access the cost associated with training, input usage, and output usage for fine-tuning models.
+        Users can specify a particular model to obtain its specific pricing details. If no model name is provided, 
+        the method returns comprehensive pricing information for all available fine-tuning models.
 
         Parameters:
-            model_name (str, optional): The name of the specific fine-tuning model for which
-                                        to retrieve pricing information. If None, pricing
-                                        information for all fine-tuning models is returned.
-                                        Default is None.
+            model_name (str, optional): The name of the specific fine-tuning model for which pricing 
+                                        information is desired. If None, pricing information for all 
+                                        fine-tuning models is returned. The default value is None.
 
         Returns:
-            dict: A dictionary containing pricing information. If a model name is provided,
-                it returns a dictionary with keys 'training', 'input_usage', and 'output_usage'.
-                If no model name is provided, it returns a dictionary with model names as keys
-                and their respective pricing information as values.
+            dict: A dictionary containing the pricing information. If a specific model name is given, 
+                the dictionary includes keys 'training', 'input_usage', and 'output_usage' with their 
+                respective costs. If no model name is specified, it returns a dictionary with model 
+                names as keys and their respective pricing details as values.
 
         Raises:
-            ValueError: If a model_name is provided but does not exist in the pricing data.
+            ValueError: If the provided model_name does not exist in the fine-tuning models pricing data.
 
         Example:
+            >>> pricing_data = OpenAIPricing(json_data)
             >>> pricing_data.get_fine_tuning_model_pricing('gpt-3.5-turbo')
             {'training': 0.008, 'input_usage': 0.003, 'output_usage': 0.006}
         """
+
         models = self.data["pricing"]["fine_tuning_models"]
         if model_name:
             # Check if the model_name is in the models dictionary
@@ -233,27 +212,28 @@ class OpenAIPricing:
         """
         Retrieves pricing information for embedding models from the stored pricing data.
 
-        If a specific model name is provided, this method returns the pricing details for that
-        particular embedding model. If no model name is given, it returns the pricing information
-        for all embedding models in a dictionary.
+        This method allows for fetching pricing details of specific embedding models or all embedding models, based on the provided model name.
+        If a model name is specified, it returns the pricing for that particular embedding model. If no model name is given, 
+        it returns pricing details for all embedding models in a comprehensive dictionary.
 
         Parameters:
-            model_name (str, optional): The name of the specific embedding model to retrieve pricing
-                                        for. If None, returns all embedding models' pricing info.
+            model_name (str, optional): The name of the specific embedding model for which pricing information is desired. 
+                                        If None, pricing information for all embedding models is returned.
 
         Returns:
-            dict: A dictionary containing the pricing information. If a specific model name is given,
-                the dictionary contains keys 'usage' with respective costs. If no model
-                name is provided, returns a dictionary with model names as keys and their
-                respective pricing dictionaries as values.
+            dict: A dictionary containing the pricing information. If a specific model name is provided, 
+                the dictionary includes the 'usage' cost for that model. If no model name is specified, 
+                it returns a dictionary with model names as keys and their respective pricing information as values.
 
         Raises:
-            ValueError: If a specific model_name is provided but not found in the pricing data.
+            ValueError: If a model_name is specified but not found in the embedding models pricing data.
 
         Example:
+            >>> pricing_data = OpenAIPricing(json_data)
             >>> pricing_data.get_embedding_model_pricing('ada v2')
             {'usage': 0.0001}
         """
+
         models = self.data["pricing"]["embedding_models"]
         if model_name:
             if model_name in models:
@@ -265,31 +245,33 @@ class OpenAIPricing:
 
     def get_base_model_pricing(self, model_name=None):
         """
-        Retrieves pricing information for base models from the provided pricing data.
+        Retrieves pricing information for base models from the stored pricing data.
 
-        This method returns the cost associated with the use of base language models as specified in the
-        pricing data. If a specific model name is provided, it returns the pricing for that model.
-        If no model name is provided, it returns the pricing for all base models.
+        This method facilitates access to cost details associated with the use of base language models. Users can obtain pricing information 
+        for a specific model if the model name is provided. If no model name is given, the method returns pricing details for all base models.
 
         Parameters:
-            model_name (str, optional): The name of the base model for which pricing information is requested.
+            model_name (str, optional): The name of the specific base model for which pricing information is sought. 
                                         If None, the method returns pricing information for all base models.
 
         Returns:
-            dict: A dictionary containing the pricing information for the requested base model(s).
-                Each key in the dictionary is a model name, and the value is another dictionary
-                with details about the usage cost.
+            dict: A dictionary containing pricing details. If a specific model name is provided, 
+                it returns a dictionary with details about the usage cost for that model. 
+                If no model name is specified, it returns a dictionary with each model name as a key 
+                and their respective pricing details as values.
 
         Raises:
-            ValueError: If the model_name is provided but not found in the base models pricing data.
+            ValueError: If a model_name is provided but not found in the base models pricing data.
 
         Example:
+            >>> pricing_data = OpenAIPricing(json_data)
             >>> pricing_data.get_base_model_pricing('davinci-002')
             {'usage': 0.002}
 
             >>> pricing_data.get_base_model_pricing()
             {'davinci-002': {'usage': 0.002}, 'babbage-002': {'usage': 0.0004}}
         """
+
         models = self.data["pricing"]["base_models"]
         if model_name:
             if model_name in models:
@@ -302,50 +284,46 @@ class OpenAIPricing:
 
     def get_image_model_pricing(self, model_name=None):
         """
-        Retrieves pricing information for image models from the pricing data.
+        Retrieves pricing information for image models from the stored pricing data.
 
-        This method provides pricing details for image generation models. If a specific
-        model name is provided, it returns the pricing for that model. If no model name
-        is provided, it returns the pricing information for all available image models.
+        This method is designed to provide users with pricing details for various image generation models offered by OpenAI. 
+        If a specific model or category name is given, it returns the pricing specific to that model or category. 
+        If no model name is specified, the method returns pricing information for all available image models.
 
         Parameters:
-        ----------
-        model_name : str, optional
-            The name of the specific image model for which pricing information is requested.
-            If None, the method returns pricing information for all image models.
+            model_name (str, optional): The name of the specific image model or category for which pricing information is sought. 
+                                        If None, pricing information for all image models is returned.
 
         Returns:
-        -------
-        dict or None
-            A dictionary containing the pricing information for the requested image model(s).
-            Each key in the dictionary represents a model name or category, with corresponding
-            pricing details as a nested dictionary.
+            dict or None: A dictionary containing the pricing information for the requested image model(s). 
+                        Each key in the dictionary represents a model name or category, with corresponding 
+                        pricing details in a nested dictionary. Returns None if the requested model name 
+                        does not exist in the pricing data.
 
         Raises:
-        ------
-        ValueError
-            If the model_name is provided but not found in the image models pricing data.
+            ValueError: If the specified model_name is not found in the image models pricing data.
 
         Example:
-        --------
-        >>> pricing_data.get_image_model_pricing('DALL·E 3')
-        {
-            'Standard': {
-                '1024x1024': 0.04,
-                '1024x1792_1792x1024': 0.08
-            },
-            'HD': {
-                '1024x1024': 0.08,
-                '1024x1792_1792x1024': 0.12
+            >>> pricing_data = OpenAIPricing(json_data)
+            >>> pricing_data.get_image_model_pricing('DALL·E 3')
+            {
+                'Standard': {
+                    '1024x1024': 0.04,
+                    '1024x1792_1792x1024': 0.08
+                },
+                'HD': {
+                    '1024x1024': 0.08,
+                    '1024x1792_1792x1024': 0.12
+                }
             }
-        }
 
-        >>> pricing_data.get_image_model_pricing()
-        {
-            'DALL·E 3': { ... },
-            'DALL·E 2': { ... }
-        }
+            >>> pricing_data.get_image_model_pricing()
+            {
+                'DALL·E 3': { ... },
+                'DALL·E 2': { ... }
+            }
         """
+
         models = self.data["pricing"]["image_models"]
         if model_name:
             model_pricing = models.get(model_name)
@@ -359,43 +337,37 @@ class OpenAIPricing:
 
     def get_audio_model_pricing(self, model_name=None):
         """
-        Retrieves the pricing information for audio models from the stored data.
+        Retrieves pricing information for audio models from the stored pricing data.
 
-        This method fetches the pricing details for audio-related models, such as transcription
-        and text-to-speech services. If a specific model name is provided, it returns the pricing
-        for that model. If no model name is provided, it returns the pricing information for all
-        available audio models.
+        This method is intended to provide detailed pricing information for audio-related models, including services like transcription 
+        and text-to-speech. Users can specify a particular audio model to get its pricing details. If no model name is provided, 
+        the method returns pricing information for all available audio models.
 
         Parameters:
-        ----------
-        model_name : str, optional
-            The name of the specific audio model for which pricing information is requested.
-            If None, the method returns pricing information for all audio models.
+            model_name (str, optional): The name of the specific audio model for which pricing information is sought. 
+                                        If None, the method returns pricing information for all audio models.
 
         Returns:
-        -------
-        dict or None
-            A dictionary containing the pricing information for the requested audio model(s).
-            Each key in the dictionary represents a model name, with the corresponding pricing
-            details.
+            dict or None: A dictionary containing the pricing information for the requested audio model(s). 
+                        Each key in the dictionary represents a model name, with corresponding pricing details. 
+                        Returns None if the requested model name does not exist in the pricing data.
 
         Raises:
-        ------
-        ValueError
-            If the model_name is provided but not found in the audio models pricing data.
+            ValueError: If the specified model_name is not found in the audio models pricing data.
 
         Example:
-        --------
-        >>> pricing_data.get_audio_model_pricing('Whisper')
-        {'usage': 0.006}
+            >>> pricing_data = OpenAIPricing(json_data)
+            >>> pricing_data.get_audio_model_pricing('Whisper')
+            {'usage': 0.006}
 
-        >>> pricing_data.get_audio_model_pricing()
-        {
-            'Whisper': {'usage': 0.006},
-            'TTS': {'usage': 0.015},
-            'TTS HD': {'usage': 0.03}
-        }
+            >>> pricing_data.get_audio_model_pricing()
+            {
+                'Whisper': {'usage': 0.006},
+                'TTS': {'usage': 0.015},
+                'TTS HD': {'usage': 0.03}
+            }
         """
+
         models = self.data["pricing"]["audio_models"]
         if model_name:
             model_pricing = models.get(model_name)
@@ -408,25 +380,30 @@ class OpenAIPricing:
     
     def estimate_finetune_training_cost(self, number_of_tokens: int, model_name: str = "gpt-3.5-turbo")-> float:
         """
-            Estimates the cost of training or fine-tuning based on token count and model.
+        Estimates the cost of training or fine-tuning a model based on token count and model selection.
 
-            Parameters
-            ----------
-            number_of_tokens : int
-                The number of tokens that will be processed.
-            model_name : str, optional
-                The name of the model to be used, defaulting to 'gpt-3.5-turbo'.
+        :method estimate_finetune_training_cost: Calculate the estimated cost for training or fine-tuning.
+        :type estimate_finetune_training_cost: method
 
-            Returns
-            -------
-            float
-                The estimated cost for the specified number of tokens and operation.
+        :param number_of_tokens: The total number of tokens that will be processed during training or fine-tuning.
+        :type number_of_tokens: int
 
-            Raises
-            ------
-            ValueError
-                If pricing for the specified model is not found in the pricing data.
-            """
+        :param model_name: The name of the AI model for which the training or fine-tuning is being estimated. Defaults to 'gpt-3.5-turbo' if not specified.
+        :type model_name: str, optional
+
+        :return: The calculated cost of training or fine-tuning for the given number of tokens and the specified model.
+        :rtype: float
+
+        :raises ValueError: If the pricing data for the specified model is unavailable, resulting in an inability to estimate the cost.
+
+        :example:
+
+        ::
+
+            >>> estimate_finetune_training_cost(10000, "gpt-3.5-turbo")
+            # Assuming a hypothetical cost calculation, this could return a float representing the cost.
+        """
+
         logger.debug(f"Starting Cost Estimation for {number_of_tokens} tokens using {model_name}")
         try:
             cost_per_token = self.get_fine_tuning_model_pricing(model_name)['training'] / 1000.0
@@ -440,27 +417,33 @@ class OpenAIPricing:
 
     def estimate_inference_cost(self, input_tokens: int, output_tokens: int, model_name: str = "gpt-3.5-turbo")-> float:
         """
-            Estimates the cost of inference based on token count and model.
+        Estimates the cost of inference operations based on the number of input and output tokens, as well as the chosen model.
 
-            Parameters
-            ----------
-            input_tokens : int
-                The number of tokens that will be processed as input.
-            output_tokens : int
-                The number of tokens that will be processed as output.
-            model_name : str, optional
-                The name of the model to be used, defaulting to 'gpt-3.5-turbo'.
+        :method estimate_inference_cost: Calculate the estimated cost for inference operations.
+        :type estimate_inference_cost: method
 
-            Returns
-            -------
-            float
-                The estimated cost for the specified number of tokens and operation.
+        :param input_tokens: The number of tokens to be processed as input during the inference.
+        :type input_tokens: int
 
-            Raises
-            ------
-            ValueError
-                If pricing for the specified model is not found in the pricing data.
-            """
+        :param output_tokens: The number of tokens expected to be generated as output during the inference.
+        :type output_tokens: int
+
+        :param model_name: The name of the AI model used for the inference operation. Defaults to 'gpt-3.5-turbo' if not specified.
+        :type model_name: str, optional
+
+        :return: The calculated cost of inference for the specified number of input and output tokens with the given model.
+        :rtype: float
+
+        :raises ValueError: If there is no pricing information available for the specified model, thus hindering the cost estimation.
+
+        :example:
+
+        ::
+
+            >>> estimate_inference_cost(100, 50, "gpt-3.5-turbo")
+            # Assuming hypothetical cost rates, this will return a float representing the estimated cost for 100 input tokens and 50 output tokens using 'gpt-3.5-turbo'.
+        """
+
         logger.debug(f"Starting Cost Estimation for {input_tokens} input tokens and {output_tokens} output tokens using {model_name}")
         try:
             input_cost_per_token = self.get_fine_tuning_model_pricing(model_name)['input_usage'] / 1000.0
@@ -475,40 +458,33 @@ class OpenAIPricing:
 
     def calculate_token_usage_for_messages(self, messages, model="gpt-3.5-turbo-0613"):
         """
-        Calculate the total number of tokens used by a list of messages.
+        Calculates the total number of tokens used by a list of messages, considering the specified model's tokenization scheme.
 
-        This function estimates the token usage for messages based on the model's
-        tokenization scheme. It supports different versions of GPT-3.5 Turbo and
-        GPT-4 models. For unsupported models, a NotImplementedError is raised.
-        This is used to estimate the cost of interactions with OpenAI's API based
-        on message lengths.
+        :method calculate_token_usage_for_messages: Determine the total token count for a given set of messages based on the model's encoding.
+        :type calculate_token_usage_for_messages: method
 
-        Parameters
-        ----------
-        messages : list of dict
-            List of message dictionaries with keys like 'role', 'name', and 'content'.
-        model : str, optional
-            Identifier of the model to estimate token count. Default is "gpt-3.5-turbo-0613".
+        :param messages: A list of dictionaries representing messages, with keys such as 'role', 'name', and 'content'.
+        :type messages: list of dict
 
-        Returns
-        -------
-        int
-            Total number of tokens for the messages as per the model's encoding scheme.
+        :param model: Identifier of the model for estimating token count. Defaults to "gpt-3.5-turbo-0613".
+        :type model: str, optional
 
-        Raises
-        ------
-        KeyError
-            If the model's encoding is not found.
-        NotImplementedError
-            If token counting is not implemented for the model.
+        :return: The total token count for the provided messages as encoded by the specified model.
+        :rtype: int
 
-        Examples
-        --------
-        >>> messages = [{"role": "user", "content": "Hello!"}, 
-        ...             {"role": "assistant", "content": "Hi there!"}]
-        >>> calculate_token_usage_for_messages(messages)
-        14  # Example token count for "gpt-3.5-turbo-0613" model.
+        :raises KeyError: If the token encoding for the specified model is not found in the encoding data.
+        :raises NotImplementedError: If the function does not support token counting for the given model.
+
+        :example:
+
+        ::
+
+            >>> messages = [{"role": "user", "content": "Hello!"}, 
+            ...             {"role": "assistant", "content": "Hi there!"}]
+            >>> calculate_token_usage_for_messages(messages)
+            # Assuming the model 'gpt-3.5-turbo-0613', this returns the total token count for the messages.
         """
+
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
@@ -558,8 +534,27 @@ class OpenAIPricing:
 
     def load_dataset(self, file_path):
         """
-        Load a dataset from a file which can be in CSV, JSON or JSONL format.
+        Loads a dataset from a specified file, supporting CSV, JSON, or JSONL formats.
+
+        :method load_dataset: Read and load data from a file into an appropriate data structure.
+        :type load_dataset: method
+
+        :param file_path: The path to the file containing the dataset.
+        :type file_path: str
+
+        :return: A list of dictionaries where each dictionary represents a record in the dataset.
+        :rtype: list of dict
+
+        :raises ValueError: If the file format is not supported. Only CSV, JSON, or JSONL formats are acceptable.
+
+        :example:
+
+        ::
+
+            >>> load_dataset("data.csv")
+            # This will return the contents of 'data.csv' as a list of dictionaries.
         """
+
         if file_path.endswith('.csv'):
             return pd.read_csv(file_path).to_dict(orient='records')
         elif file_path.endswith('.json'):
@@ -573,8 +568,28 @@ class OpenAIPricing:
 
     def calculate_token_usage_for_dataset(self, dataset_path, model="gpt-3.5-turbo-0613"):
         """
-        Calculate the total number of tokens used by a dataset.
+        Calculates the total number of tokens used by a dataset, based on the provided model's tokenization scheme.
+
+        :method calculate_token_usage_for_dataset: Estimate the total token count for a dataset using a specified model.
+        :type calculate_token_usage_for_dataset: method
+
+        :param dataset_path: The file path of the dataset for which token usage is to be calculated.
+        :type dataset_path: str
+
+        :param model: Identifier of the model for estimating token count. Defaults to "gpt-3.5-turbo-0613".
+        :type model: str, optional
+
+        :return: The total token count for the dataset as per the model's encoding scheme.
+        :rtype: int
+
+        :example:
+
+        ::
+
+            >>> calculate_token_usage_for_dataset("dataset.jsonl")
+            # Assuming the model 'gpt-3.5-turbo-0613', this returns the total token count for the dataset.
         """
+
         messages = self.load_dataset(dataset_path)
         return self.calculate_token_usage_for_messages(messages, model=model)
     
