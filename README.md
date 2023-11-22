@@ -6,6 +6,9 @@ _Simplifying LLM Development and Fine-Tuning with Python_
 # Overview
 
 [![PyPI version](https://img.shields.io/pypi/v/scalexi.svg)](https://pypi.org/project/scalexi/)
+[![Read the Docs](https://img.shields.io/badge/docs-read_the_docs-blue.svg)](http://docs.scalexi.ai/)
+[![Project Folder](https://img.shields.io/badge/Google%20Drive-Project%20Folder-green.svg)](https://drive.google.com/drive/u/1/folders/1XoUzkGwpHns1fUa-Q9j7iDIqYoRPch61)
+
 
 `scalexi` is a versatile open-source Python library, optimized for Python 3.11+, focuses on facilitating low-code development and fine-tuning of diverse Large Language Models (LLMs). It extends beyond its initial OpenAI models integration, offering a scalable framework for various LLMs.
 
@@ -46,14 +49,15 @@ pip install scalexi
 ```
 This will install scalexi and its dependencies, making it ready for use with Python 3.11 and above (not tested on lower Python versions). 
 
-
 ## Usage
 
 The `scalexi` toolkit offers comprehensive features for creating, evaluating, and fine-tuning Large Language Models (LLMs) with OpenAI's API. It allows users to generate datasets from custom context entries, estimate costs for model training and inference, and convert datasets into formats suitable for fine-tuning. Users can fine-tune models with the FineTuningAPI, which includes a dashboard for managing fine-tuning jobs. Additionally, ScaleXI facilitates the evaluation of fine-tuned LLMs by generating random samples, rephrasing prompts for better generalization, and assessing model performance based on generated completions. This toolkit simplifies and streamlines the process of working with LLMs, making it more accessible and efficient for various applications in research, academia, and industry.
 
 In what follow, we present the different use cases of `scalexi`.
 
-### I. Automated Dataset Generation
+### I. Automated Dataset Generation 
+[![01-create-fine-tuning-dataset](https://img.shields.io/badge/Colab-01--create--fine--tuning--dataset-blue.svg)](https://colab.research.google.com/drive/1ClCT0jvThX0RvPN3eiWJnQVNjncW9R4-?authuser=1#scrollTo=Yk7UtLqKBgy5)
+
 #### Context File Setup
 To generate a dataset with scalexi, prepare a CSV file with a single column titled 'context'. Populate this column with context entries, each in a new row, ensuring the content is within the LLM's token limit. Save the file in a recognized directory before starting the dataset creation process.
 
@@ -95,6 +99,10 @@ This script will generate a dataset with `'yes-no'`, `'open-ended'` and `'reflec
 
 ### II.Cost Estimation and Dataset Formatting with ScaleXI
 
+[![02-estimate-pricing](https://img.shields.io/badge/Colab-02--estimate--pricing-blue.svg)](https://colab.research.google.com/drive/1FWJFW5v82j0j9bkBbHkVlRqakoRnpKS0?authuser=1#scrollTo=WA2EdYTWGWd1)
+
+
+
 The ScaleXI library provides utilities for estimating the cost of using OpenAI's models and converting datasets into the required formats.
 
 #### Estimating Costs with OpenAIPricing
@@ -125,7 +133,10 @@ estimated_cost = pricing.estimate_inference_cost(input_tokens, output_tokens, mo
 print(f"Estimated inference cost: ${estimated_cost:.2f}")
 ```
 
-#### Converting Datasets with DataFormatter
+### III. Converting Datasets with DataFormatter
+
+[![03-convert_dataset-with-dataformatter](https://img.shields.io/badge/Colab-03--convert_dataset--with--dataformatter-blue.svg)](https://colab.research.google.com/drive/1fQALOQGPv0XalRUZiAZL4h3Km6n5kNMj?authuser=1#scrollTo=SZdMZ5WHH8X1)
+
 The DataFormatter class can convert datasets from CSV to JSONL, which is the required format for fine-tuning datasets on OpenAI.
 ```python
 from scalexi.utilities.data_formatter import DataFormatter
@@ -158,7 +169,8 @@ estimated_cost = pricing.estimate_finetune_training_cost(number_of_tokens, model
 print(f"Estimated fine-tuning cost for the conversation dataset: ${estimated_cost:.2f}")
 ```
 
-### III.Fine-Tuning OpenAI Models with ScaleXI
+### IV.Fine-Tuning OpenAI Models with ScaleXI
+[![04-fine-tuning-openai-models](https://img.shields.io/badge/Colab-04--fine--tuning--openai--models-blue.svg)](https://colab.research.google.com/drive/14cX5Km2GB89hCFAOuAR68-p7t2djhbli?authuser=1#scrollTo=LoNPMN2UIfu0)
 
 ScaleXI simplifies the process of fine-tuning Large Language Models (LLMs) with OpenAI's API. Here's how you can start fine-tuning your models with the `FineTuningAPI` class.
 
@@ -208,7 +220,8 @@ Menu:
 ```
 
 
-### IV.Fine-Tuned LLM Evaluation
+### V.Fine-Tuned LLM Evaluation
+[![05-evaluate-a-fine-tuned-model](https://img.shields.io/badge/Colab-05--evaluate--a--fine--tuned--model-blue.svg)](https://colab.research.google.com/drive/1x39mKd0tJt-iAGIT0-FXieMpkKXSII0T?authuser=1#scrollTo=bfYV0a-bL7BO)
 
 #### Step 1: Random Sample Creation
 Generate a random sample from your dataset for evaluation purposes.
