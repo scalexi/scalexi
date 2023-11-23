@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="scalexi",
-    version="0.4.5.2",
+    version="0.4.5.3",
     packages=find_packages(),
     include_package_data=True,
     package_data={'scalexi': ['data/*']},

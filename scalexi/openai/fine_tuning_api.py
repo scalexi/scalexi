@@ -597,7 +597,7 @@ class FineTuningAPI:
             print("6. Cancel a job")
             print("7. List up to 10 events from a fine-tuning job")
             print("8. Use a fine-tuned model")
-            print("8. Delete a fine-tuned model")
+            print("9. Delete a fine-tuned model")
             print("10. Exit")
 
             choice = input("Enter your choice: ")
