@@ -485,6 +485,10 @@ class OpenAIPricing:
             # Assuming the model 'gpt-3.5-turbo-0613', this returns the total token count for the messages.
         """
 
+            # Convert string input to the required dictionary format
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
@@ -593,3 +597,4 @@ class OpenAIPricing:
         messages = self.load_dataset(dataset_path)
         return self.calculate_token_usage_for_messages(messages, model=model)
     
+
