@@ -119,14 +119,56 @@ class OpenAIPricing:
             >>> pricing_data.get_language_model_pricing('GPT-4')
             {'input': 0.03, 'output': 0.06}
         """
-        models = self.data["pricing"]["language_models"]
+        language_models = self.data["pricing"]["language_models"]
+        #print('language_models:', language_models)
+
         if model_name:
-            if model_name in models:
-                return models[model_name]
-            else:
-                raise ValueError(f"Model '{model_name}' not found in language models pricing.")
+            for category_name, category in language_models.items():
+                #print('category_name:', category_name)
+                #print('category:', category)
+                
+                if 'models' in category and model_name in category["models"]:
+                    #print(f"Found {model_name} in {category_name}, pricing:", category["models"][model_name])
+                    return category["models"][model_name]
+                #else:
+                    #print(f"{model_name} not found in {category_name}")
+            
+            raise ValueError(f"Model '{model_name}' not found in language models pricing.")
         else:
-            return models
+            all_models = {}
+            for category in language_models.values():
+                if 'models' in category:
+                    all_models.update(category["models"])
+            return all_models
+        
+    def get_inference_pricing(self, model_name=None):
+        """
+        Retrieves pricing information for language models based on the provided model name.
+
+        This method accesses the stored pricing data to return details for a specific language model or for all language models. 
+        If a model name is specified, it fetches pricing for that particular model. 
+        If no model name is given, it returns comprehensive pricing details for all language models.
+
+        :param model_name: The name of a specific language model for which pricing information is required. 
+                        If None, pricing information for all language models is returned.
+        :type model_name: Optional[str]
+
+        :return: A dictionary containing the pricing information. If a specific model name is provided, 
+                it returns a dictionary with 'input' and 'output' costs. Otherwise, it returns a dictionary 
+                with each model category as keys and their respective pricing information as values.
+        :rtype: dict
+
+        :raises ValueError: If a specified model_name is not found in the stored language models pricing data.
+
+        :example:
+
+        ::
+
+            >>> pricing_data = OpenAIPricing(json_data)
+            >>> pricing_data.get_language_model_pricing('GPT-4')
+            {'input': 0.03, 'output': 0.06}
+        """
+        return self.get_language_model_pricing(model_name)
 
     def get_assistants_api_pricing(self, tool_name=None):
         """
@@ -446,12 +488,12 @@ class OpenAIPricing:
 
         logger.debug(f"Starting Cost Estimation for {input_tokens} input tokens and {output_tokens} output tokens using {model_name}")
         try:
-            input_cost_per_token = self.get_fine_tuning_model_pricing(model_name)['input_usage'] / 1000.0
-            output_cost_per_token = self.get_fine_tuning_model_pricing(model_name)['output_usage'] / 1000.0
+            input_cost_per_token = self.get_language_model_pricing(model_name)['input'] / 1000.0
+            output_cost_per_token = self.get_language_model_pricing(model_name)['output'] / 1000.0
             logger.debug(f"Estimated cost for {input_tokens} input tokens and {output_tokens} output tokens using {model_name}: ${input_cost_per_token * input_tokens + output_cost_per_token * output_tokens:.2f}")
             return input_cost_per_token * input_tokens + output_cost_per_token * output_tokens
         except Exception as e:
-            logger.error(f"[OpenAIPricing] Pricing information for model {model_name} not found.\n", exc_info=False)
+            logger.error(f"[OpenAIPricing] Pricing information for model {model_name} not found. ERROR: {e}\n", exc_info=False)
             raise ValueError(f"Pricing information for model {model_name} not found.")
     
 
