@@ -264,7 +264,8 @@ class DataFormatter:
         """
 
         # Remove the ```json and ``` markers
-        stripped_text = input_text.replace("```json", "").replace("```", "").strip()
+        stripped_text = input_text.replace("```json", "").replace("``` json", "").replace("``` JSON", "").replace("```JSON", "").replace("```", "").strip()
+        
         return stripped_text
 
 
