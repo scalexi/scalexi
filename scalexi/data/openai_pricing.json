@@ -9,6 +9,14 @@
                         "input": 0.01,
                         "output": 0.03
                     },
+                    "gpt-4-0125-preview": {
+                        "input": 0.01,
+                        "output": 0.03
+                    },
+                    "gpt-4-turbo-preview": {
+                        "input": 0.01,
+                        "output": 0.03
+                    },
                     "gpt-4-1106-vision-preview": {
                         "input": 0.01,
                         "output": 0.03

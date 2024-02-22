@@ -1,14 +1,15 @@
 from setuptools import setup, find_packages
 
+
 setup(
     name="scalexi",
-    version="0.4.5.5",
+    version="0.4.5.7",
     packages=find_packages(),
     include_package_data=True,
     package_data={'scalexi': ['data/*']},
     install_requires=[
         "pandas",  # Add any package dependencies here
-        "openai>=1.0.0", #this package is not compatible with earlier versions of openai
+        "openai>=1.10.0", #this package is not compatible with earlier versions of openai
         "sphinx",   # Add any other dependencies as needed
         "cohere",
         "sphinx_rtd_theme",   # Add any other dependencies as needed
@@ -16,7 +17,10 @@ setup(
         "pyyaml",
         "lxml",
         "requests",
-        "httpx"
+        "httpx",
+        "langchain",
+        "pypdf",
+        "langchain-openai"
     ],
     entry_points={
         "console_scripts": [
