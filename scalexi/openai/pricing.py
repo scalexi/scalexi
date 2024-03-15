@@ -323,6 +323,28 @@ class OpenAIPricing:
         else:
             return models
 
+    def extract_response_and_token_usage(response):
+        """
+        Extracts the content of the response and token usage from the response message.
+
+        Parameters:
+        - response (dict): The response message received.
+
+        Returns:
+        - tuple: A tuple containing the content of the response and the token usage dictionary.
+        """
+        # Extract the content of the response
+        content = response.choices[0].message.content
+        
+        # Extract the token usage
+        token_usage = {
+            "completion_tokens": response.usage.completion_tokens,
+            "prompt_tokens": response.usage.prompt_tokens,
+            "total_tokens": response.usage.total_tokens
+        }
+        
+        return content, token_usage
+
 
     def get_image_model_pricing(self, model_name=None):
         """
@@ -638,5 +660,31 @@ class OpenAIPricing:
 
         messages = self.load_dataset(dataset_path)
         return self.calculate_token_usage_for_messages(messages, model=model)
+    
+
+    def extract_response_and_token_usage_and_cost(self, response, model_name):
+        """
+        Extracts the content of the response, token usage, and estimates the inference cost.
+
+        Parameters:
+        - response (dict): The response message received.
+
+        Returns:
+        - tuple: A tuple containing the content of the response, the token usage dictionary, and the estimated cost.
+        """
+        # Extract the content and token usage
+        content = response.choices[0].message.content
+        print('content:', content)
+        token_usage = {
+            "completion_tokens": response.usage.completion_tokens,
+            "prompt_tokens": response.usage.prompt_tokens,
+            "total_tokens": response.usage.total_tokens
+        }
+        print(token_usage)
+        
+        # Estimate the cost
+        cost = self.estimate_inference_cost(token_usage['prompt_tokens'], token_usage['completion_tokens'], model_name)
+        
+        return content, token_usage, cost
     
 
