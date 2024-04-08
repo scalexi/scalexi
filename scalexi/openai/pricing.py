@@ -674,13 +674,13 @@ class OpenAIPricing:
         """
         # Extract the content and token usage
         content = response.choices[0].message.content
-        print('content:', content)
+        #print('content:', content)
         token_usage = {
             "completion_tokens": response.usage.completion_tokens,
             "prompt_tokens": response.usage.prompt_tokens,
             "total_tokens": response.usage.total_tokens
         }
-        print(token_usage)
+        #print(token_usage)
         
         # Estimate the cost
         cost = self.estimate_inference_cost(token_usage['prompt_tokens'], token_usage['completion_tokens'], model_name)
