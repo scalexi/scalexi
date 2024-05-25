@@ -20,7 +20,8 @@ setup(
         "httpx",
         "langchain",
         "pypdf",
-        "langchain-openai"
+        "langchain-openai",
+        "fastapi",
     ],
     entry_points={
         "console_scripts": [

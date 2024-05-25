@@ -1,0 +1,127 @@
+{
+    "release_date": "2023-11-15",
+    "pricing": {
+        "language_models": {
+            "GPT-4 Turbo": {
+                "context": "128k context, fresher knowledge and the broadest set of capabilities",
+                "models": {
+                    "gpt-4-1106-preview": {
+                        "input": 0.01,
+                        "output": 0.03
+                    },
+                    "gpt-4-0125-preview": {
+                        "input": 0.01,
+                        "output": 0.03
+                    },
+                    "gpt-4-turbo-preview": {
+                        "input": 0.01,
+                        "output": 0.03
+                    },
+                    "gpt-4-1106-vision-preview": {
+                        "input": 0.01,
+                        "output": 0.03
+                    }
+                }
+            },
+            "GPT-4": {
+                "context": "Broad general knowledge and domain expertise",
+                "models": {
+                    "gpt-4": {
+                        "input": 0.03,
+                        "output": 0.06
+                    },
+                    "gpt-4-32k": {
+                        "input": 0.06,
+                        "output": 0.12
+                    }
+                }
+            },
+            "GPT-3.5 Turbo": {
+                "context": "Capable and cost-effective models",
+                "models": {
+                    "gpt-3.5-turbo-1106": {
+                        "input": 0.001,
+                        "output": 0.002
+                    },
+                    "gpt-3.5-turbo": {
+                        "input": 0.001,
+                        "output": 0.002
+                    },
+                    "gpt-3.5-turbo-instruct": {
+                        "input": 0.0015,
+                        "output": 0.002
+                    }
+                }
+            }
+        },
+        "assistants_api": {
+            "Code interpreter": {
+                "input": 0.03,
+                "note": "Free until 11/17/2023"
+            },
+            "Retrieval": {
+                "input": 0.2,
+                "note": "Free until 11/17/2023"
+            }
+        },
+        "fine_tuning_models": {
+            "gpt-3.5-turbo": {
+                "training": 0.008,
+                "input_usage": 0.003,
+                "output_usage": 0.006
+            },
+            "davinci-002": {
+                "training": 0.006,
+                "input_usage": 0.012,
+                "output_usage": 0.012
+            },
+            "babbage-002": {
+                "training": 0.0004,
+                "input_usage": 0.0016,
+                "output_usage": 0.0016
+            }
+        },
+        "embedding_models": {
+            "ada v2": {
+                "usage": 0.0001
+            }
+        },
+        "base_models": {
+            "davinci-002": {
+                "usage": 0.002
+            },
+            "babbage-002": {
+                "usage": 0.0004
+            }
+        },
+        "image_models": {
+            "DALL·E 3": {
+                "Standard": {
+                    "1024x1024": 0.04,
+                    "1024x1792_1792x1024": 0.08
+                },
+                "HD": {
+                    "1024x1024": 0.08,
+                    "1024x1792_1792x1024": 0.12
+                }
+            },
+            "DALL·E 2": {
+                "1024x1024": 0.02,
+                "512x512": 0.018,
+                "256x256": 0.016
+            }
+        },
+        "audio_models": {
+            "Whisper": {
+                "usage": 0.006
+            },
+            "TTS": {
+                "usage": 0.015
+            },
+            "TTS HD": {
+                "usage": 0.03
+            }
+        }
+    }
+}
+

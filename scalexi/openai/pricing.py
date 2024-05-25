@@ -323,7 +323,7 @@ class OpenAIPricing:
         else:
             return models
 
-    def extract_response_and_token_usage(response):
+    def extract_response_and_token_usage(self, response):
         """
         Extracts the content of the response and token usage from the response message.
 
@@ -344,6 +344,24 @@ class OpenAIPricing:
         }
         
         return content, token_usage
+    
+    def extract_gpt_token_usage(self, response):
+        """
+        Extracts the token usage from a ChatCompletion response object and returns it in a dictionary.
+
+        :param response: The ChatCompletion response object.
+        :return: A dictionary containing the number of tokens used for the prompt, completion, and total.
+        """
+        if hasattr(response, 'usage'):
+            token_usage = {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens
+            }
+        else:
+            token_usage = {"error": "No token usage information available"}
+
+        return token_usage
 
 
     def get_image_model_pricing(self, model_name=None):
@@ -686,5 +704,76 @@ class OpenAIPricing:
         cost = self.estimate_inference_cost(token_usage['prompt_tokens'], token_usage['completion_tokens'], model_name)
         
         return content, token_usage, cost
+    
+    
+    def calculate_token_usage_for_text(self, text, model="gpt-3.5-turbo-0613"):
+        """
+        Calculates the total number of tokens used by an input text, considering the specified model's tokenization scheme.
+
+        :method calculate_token_usage_for_text: Determine the total token count for a given text based on the model's encoding.
+        :type calculate_token_usage_for_text: method
+
+        :param text: A string representing the input text.
+        :type text: str
+
+        :param model: Identifier of the model for estimating token count. Defaults to "gpt-3.5-turbo-0613".
+        :type model: str, optional
+
+        :return: The total token count for the provided text as encoded by the specified model.
+        :rtype: int
+
+        :raises KeyError: If the token encoding for the specified model is not found in the encoding data.
+        :raises NotImplementedError: If the function does not support token counting for the given model.
+
+        :example:
+
+        ::
+
+            >>> text = "Hello! How can I assist you today?"
+            >>> calculate_token_usage_for_text(text)
+            # Assuming the model 'gpt-3.5-turbo-0613', this returns the total token count for the text.
+        """
+
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            print("Warning: Model not found. Using cl100k_base encoding.")
+            encoding = tiktoken.get_encoding("cl100k_base")
+
+        # Token allocation per model
+        tokens_allocation = {
+            "gpt-3.5-turbo-0613": (3, 1),
+            "gpt-3.5-turbo-16k-0613": (3, 1),
+            "gpt-4-0314": (3, 1),
+            "gpt-4-32k-0314": (3, 1),
+            "gpt-4-0613": (3, 1),
+            "gpt-4-32k-0613": (3, 1),
+            "gpt-3.5-turbo-0301": (4, -1)  # every message follows {role/name}\n{content}\n
+        }
+
+        # Default tokens per message and name
+        tokens_per_message, tokens_per_name = tokens_allocation.get(
+            model, 
+            (3, 1)  # Default values
+        )
+
+        # Handling specific model updates
+        if "gpt-3.5-turbo" in model:
+            print("Warning: gpt-3.5-turbo may update over time. Assuming gpt-3.5-turbo-0613.")
+            tokens_per_message, tokens_per_name = tokens_allocation["gpt-3.5-turbo-0613"]
+        elif "gpt-4" in model:
+            print("Warning: gpt-4 may update over time. Assuming gpt-4-0613.")
+            tokens_per_message, tokens_per_name = tokens_allocation["gpt-4-0613"]
+        else:
+            raise NotImplementedError(
+                f"Token counting not implemented for model {model}. "
+                "See the OpenAI Python library documentation for details."
+            )
+
+        # Token counting
+        num_tokens = tokens_per_message  # start with the base tokens per message
+        num_tokens += len(encoding.encode(text))  # add the tokens for the text content
+
+        return num_tokens
     
 
