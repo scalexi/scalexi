@@ -25,17 +25,6 @@ pricing_info = json.loads(data)
 #print(dfm.json_to_yaml(pricing_info))
 pricing = OpenAIPricing(pricing_info)
 
-
-
-
-# Create a logger file
-logger = Logger().get_logger()
-
-data = pkgutil.get_data('scalexi', 'data/openai_pricing.json')
-pricing_info = json.loads(data)
-#print(dfm.json_to_yaml(pricing_info))
-pricing = OpenAIPricing(pricing_info)
-
 def remove_latex_constructs(context: str) -> str:
     # Remove LaTeX comment lines
     context = re.sub(r'%.*', '', context)
@@ -375,7 +364,7 @@ def classify_text(text, categories, model_name="gpt-3.5-turbo-1106", openai_api_
         logger.error(f"Error during text classification: {str(e)}")
         return json.dumps({"error": str(e)})
 
-def get_text_statistics(pdf_path, model_name="gpt-4"):
+def get_text_statistics_basic(pdf_path, model_name="gpt-4"):
     """
     Provides descriptive statistics about the extracted text from a PDF.
 
@@ -429,3 +418,92 @@ def get_text_statistics(pdf_path, model_name="gpt-4"):
     }
     
     return stats
+
+
+def get_openai_pricing():
+    """
+    Returns the pricing information for OpenAI models.
+
+    :return: A dictionary containing the pricing information for OpenAI models.
+    """
+    data = pkgutil.get_data('scalexi', 'data/openai_pricing.json')
+    pricing_info = json.loads(data)
+    pricing = OpenAIPricing(pricing_info)
+    return pricing
+  
+def get_openai_pricing_info():
+    """
+    Returns the pricing information for OpenAI models.
+
+    :return: A dictionary containing the pricing information for OpenAI models.
+    """
+    data = pkgutil.get_data('scalexi', 'data/openai_pricing.json')
+    pricing_info = json.loads(data)
+    return pricing_info
+  
+
+def get_text_statistics(pdf_path, model_name="gpt-4"):
+        """
+        Provides descriptive statistics about the extracted text from a PDF.
+
+        :param pdf_path: The path to the PDF file to analyze.
+        :param model_name: The name of the model to use for token calculation.
+
+        :return: A dictionary containing descriptive statistics about the text.
+        """
+        # Initialize variables for collecting text and word counts per page
+        all_text = ""
+        words_per_page = []
+        num_pages = 0
+
+        with pdfplumber.open(pdf_path) as pdf:
+            num_pages = len(pdf.pages)
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                all_text += page_text
+                
+                # Count words per page
+                words = re.findall(r'\w+', page_text)
+                words_per_page.append(len(words))
+
+        # Number of characters
+        num_chars = len(all_text)
+        
+        # Number of words
+        words = re.findall(r'\w+', all_text)
+        num_words = len(words)
+        
+        # Number of sentences
+        sentences = re.split(r'[.!?]+', all_text)
+        num_sentences = len(sentences) - 1  # Adjust for possible trailing empty string
+        
+        # Most common words
+        word_freq = Counter(words)
+        most_common_words = word_freq.most_common(10)
+        print('most_common_words:', most_common_words)
+        # Token count
+        num_tokens = pricing.calculate_token_usage_for_text(all_text, model_name)
+        
+        # Get file size in bytes
+        try:
+            file_size = os.path.getsize(pdf_path)
+        except Exception as e:
+            logger.error(f"An error occurred while getting file size: {e}")
+            stats["file_size"] = None
+        
+        # Generate statistics dictionary
+        stats = {
+            "num_chars": num_chars,
+            "num_words": num_words,
+            "num_sentences": num_sentences,
+            "most_common_words": str(most_common_words),
+            "num_tokens": num_tokens,
+            "num_pages": num_pages,
+            "words_per_page": str(words_per_page),
+            "file_size": file_size,
+            "file_path": pdf_path,
+            "model_name": model_name
+        }   
+        
+        
+        return stats
