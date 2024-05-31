@@ -322,3 +322,21 @@ def extract_response_and_token_usage_and_cost(response, model_name):
         cost = estimate_inference_cost_by_tokens(token_usage['prompt_tokens'], token_usage['completion_tokens'], model_name)
         
         return content, token_usage, cost
+    
+def extract_gpt_token_usage(response):
+        """
+        Extracts the token usage from a ChatCompletion response object and returns it in a dictionary.
+
+        :param response: The ChatCompletion response object.
+        :return: A dictionary containing the number of tokens used for the prompt, completion, and total.
+        """
+        if hasattr(response, 'usage'):
+            token_usage = {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens
+            }
+        else:
+            token_usage = {"error": "No token usage information available"}
+
+        return token_usage
