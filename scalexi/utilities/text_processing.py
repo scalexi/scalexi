@@ -168,7 +168,7 @@ def extract_gpt_token_usage(response):
 
         return token_usage
     
-def classify_text_binary(text, category_name, model_name="gpt-3.5-turbo-1106", 
+def classify_text_binary(text, category_name, criteria="", model_name="gpt-3.5-turbo-1106", 
                          openai_api_key=None, 
                          temperature=0.0, 
                          max_tokens=128, 
@@ -182,6 +182,7 @@ def classify_text_binary(text, category_name, model_name="gpt-3.5-turbo-1106",
     Args:
     text (str): The text to classify.
     category_name (str): The expected category name to validate against.
+    criteria: The criteria for the classification.
     model_name (str): Model identifier for OpenAI API.
     openai_api_key (str, optional): API key for OpenAI. If None, it fetches from environment variable.
     temperature (float): Sampling temperature.
@@ -195,12 +196,12 @@ def classify_text_binary(text, category_name, model_name="gpt-3.5-turbo-1106",
     """
     logger.info(f"[SCALEXI-classify_text_binary] Classifying text using model: {model_name}")
     # Define the system prompt
-    system_prompt = f"""You are a text classifier. 
-    Given a text, classify it into if it is a {category_name} category.
-    Your response should be in the valid JSON structure format without any markers (no ``` markers):
-    - "category": {category_name}
-    - "confidence": <float>
-    - "is_correct": <bool>
+    system_prompt = f"""You are a precise and strict text classifier for the "{category_name}" category. 
+Below are the specific criteria for the "{category_name}" category: {criteria}
+Provide your classification response in a valid JSON structure format, ensuring no use of code markers (e.g., no ``` markers). The response format should include:
+- "category": "{category_name}"
+- "reason": "<str>" (explanation for the classification decision)
+- "category_match": <bool> (True if the text clearly and explicitly belongs to the "{category_name}" category, otherwise False)
     """
     logger.debug(f"[SCALEXI-classify_text_binary] System prompt: {system_prompt}")
     
@@ -255,8 +256,8 @@ def classify_text_binary(text, category_name, model_name="gpt-3.5-turbo-1106",
     # Prepare the final result
     final_result = {
         "category": completion['category'],
-        "confidence_score": completion['confidence'],
-        "is_correct": completion['is_correct'],
+        "category_match": completion['category_match'],
+        "reason": completion['reason'],  # "reason": "The text contains the word 'sports' multiple times.
         "execution_time": execution_time,
         "price": price,
         "token_usage": token_usage, 
