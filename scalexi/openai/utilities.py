@@ -340,3 +340,12 @@ def extract_gpt_token_usage(response):
             token_usage = {"error": "No token usage information available"}
 
         return token_usage
+    
+def extract_token_usage(response):
+    """
+    Extracts the token usage from a ChatCompletion response object and returns it in a dictionary.
+
+    :param response: The ChatCompletion response object.
+    :return: A dictionary containing the number of tokens used for the prompt, completion, and total.
+    """
+    return extract_gpt_token_usage(response)
