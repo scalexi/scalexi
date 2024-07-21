@@ -13,6 +13,19 @@ class CustomResponse(BaseModel):
     data: Optional[Any] = None
     
 def create_response(data: Optional[Dict] = None, message: str = "", status: str = "success") -> CustomResponse:
+    """
+    create_response is a function that creates a response structure for the API.
+    It accepts three parameters:
+    - data: The data to be returned in the response.
+    - message: A message to be displayed to the user.
+    - status: The status of the response. It can be "success" or "error".
+    
+    :status: str
+    :message: str
+    :data: Optional[Dict]
+    
+    :return: CustomResponse
+    """
     response_structure = CustomResponse(
         status=status,
         message=message,
