@@ -50,7 +50,7 @@ class PDFLoader:
         t0= time.time()
         logger.info('[PDFLoader] Initializing PDFLoader.')
         #EnvironmentConfigLoader().load_environment_config()#must be delcared before logger
-        #self.logger = Logger().get_logger()
+        self.logger = Logger().get_logger()
         self.pdf_path = pdf_path
         if openai_key is not None:
             self.llm = Generator(openai_key=openai_key)
@@ -520,6 +520,8 @@ class CVExtractor(PDFLoader):
         except Exception as e:
             self.logger.error('[extract_cv_information] An error occurred while extracting CV information: %s', str(e))
             #raise ValueError("[extract_cv_information] Failed to extract CV information. Upload a Valid PDF")
+            
+            
 
 
 
