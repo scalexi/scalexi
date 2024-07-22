@@ -166,6 +166,10 @@ class PDFLoader:
         }
         for old, new in replacements.items():
             text = text.replace(old, new)
+            
+        # Replace non-ASCII characters with '?'
+        text = text.encode('ascii', 'replace').decode('ascii')
+        
         return text
     
     def extract_text_from_pdf_with_PyPDF2(self):
