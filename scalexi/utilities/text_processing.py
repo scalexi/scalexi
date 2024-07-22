@@ -617,3 +617,34 @@ def calculate_token_usage_for_text(text, model="gpt-3.5-turbo-0613"):
     num_tokens += len(encoding.encode(text))  # add the tokens for the text content
 
     return num_tokens
+
+
+def remove_field_from_dict(data: dict, field: str) -> dict:
+    """
+    Removes a specified field from a dictionary, including nested dictionaries within lists.
+
+    Parameters:
+    data (dict): The dictionary from which the field should be removed.
+    field (str): The field to remove from the dictionary.
+
+    Returns:
+    dict: The dictionary with the specified field removed.
+    """
+    if not isinstance(data, dict):
+        raise ValueError("The data parameter must be a dictionary.")
+    if not isinstance(field, str):
+        raise ValueError("The field parameter must be a string.")
+
+    def remove_field_from_dict_recursively(d: dict, field: str):
+        if field in d:
+            del d[field]
+        for key, value in d.items():
+            if isinstance(value, dict):
+                remove_field_from_dict(value, field)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        remove_field_from_dict(item, field)
+
+    remove_field_from_dict_recursively(data, field)
+    return data
