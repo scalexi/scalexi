@@ -39,7 +39,7 @@ class PDFLoader:
         logger (Logger): Logger for logging information.
     """
 
-    def __init__(self, pdf_path, model_name="gpt-4o", loader_type = "pdfplumber", openai_key=None, system_prompt = None):
+    def __init__(self, pdf_path=None, model_name="gpt-4o", loader_type = "pdfplumber", openai_key=None, system_prompt = None):
         """
         Initializes the PDFLoader with a path to the PDF and an optional model name.
         
@@ -51,7 +51,8 @@ class PDFLoader:
         logger.info('[PDFLoader] Initializing PDFLoader.')
         #EnvironmentConfigLoader().load_environment_config()#must be delcared before logger
         self.logger = Logger().get_logger()
-        self.pdf_path = pdf_path
+        if pdf_path is not None:
+            self.pdf_path = pdf_path
         if openai_key is not None:
             self.llm = Generator(openai_key=openai_key)
         else:
@@ -83,7 +84,7 @@ class PDFLoader:
         #exit()
 
 
-    def load_pdf(self, loader_type = "pdfplumber"):
+    def load_pdf(self, pdf_path=None, loader_type = "pdfplumber"):
         
         """
         Loads the PDF file and extracts text from it.
@@ -91,6 +92,11 @@ class PDFLoader:
         Returns:
             str: The extracted text from the PDF.
         """
+        if pdf_path is not None:
+            self.pdf_path = pdf_path
+        if self.pdf_path is None:
+            self.logger.error('[PDFLoader] PDF path is not provided. Please provide a valid PDF path.')
+            raise ValueError("[PDFLoader] PDF path is not provided. Please provide a valid PDF path.")
         self.logger.info('[PDFLoader] Loading PDF.')
         try:
             if loader_type.lower() == "pdfplumber":
