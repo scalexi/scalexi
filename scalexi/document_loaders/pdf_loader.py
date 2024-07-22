@@ -170,6 +170,19 @@ class PDFLoader:
                 for page in pdf_reader.pages:
                     page_text = page.extract_text() or ""  # Handle None
                     all_text += self.clean_text(page_text) + "\n"
+        
+        except FileNotFoundError:
+            print("[scalexi-pdf-loader] PDF file not found.")
+            all_text = None
+        except IOError as io_error:
+            all_text = None
+            print(f"[scalexi-pdf-loader] An I/O error occurred: {str(io_error)}")
+        except PyPDF2.PdfReadError as pdf_error:
+            all_text = None
+            print(f"[scalexi-pdf-loader] An error occurred while reading the PDF file: {str(pdf_error)}")
+        except Exception as e:
+            all_text = None
+            print(f"[scalexi-pdf-loader] An unexpected error occurred: {str(e)}")
         except Exception as e:
             print(f"Failed to read PDF with PyPDF2: {e}")
             all_text = None
