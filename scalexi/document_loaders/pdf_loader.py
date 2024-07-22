@@ -428,7 +428,7 @@ class PDFLoader:
         """
         self.logger.info('[PDFLoader] structure_document')
         try:
-            complete_text = self.load_pdf()
+            complete_text = self.load_pdf(loader_type=self.loader_type)
             if complete_text is None:
                 self.logger.error("[structure_document] Failed to load the PDF. Upload a Valid PDF")
                 raise ValueError("[structure_document] Failed to load the PDF. Upload a Valid PDF")
