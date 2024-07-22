@@ -84,7 +84,7 @@ class PDFLoader:
         #exit()
 
 
-    def load_pdf(self, pdf_path=None, loader_type = "pdfplumber"):
+    def load_pdf(self, pdf_path=None, loader_type = "pdfplumber", replace_unicode=True):
         
         """
         Loads the PDF file and extracts text from it.
@@ -100,13 +100,13 @@ class PDFLoader:
         self.logger.info('[PDFLoader] Loading PDF.')
         try:
             if loader_type.lower() == "pdfplumber":
-                text = self.extract_text_pdfplumber()
+                text = self.extract_text_pdfplumber(replace_unicode = replace_unicode)
             elif loader_type.lower() == "pypdf2":
-                text = self.extract_text_from_pdf_with_PyPDF2()
+                text = self.extract_text_from_pdf_with_PyPDF2(replace_unicode = replace_unicode)
             elif loader_type.lower() == "pypdf":
-                text = self.extract_text_with_PyPDFLoader()
+                text = self.extract_text_with_PyPDFLoader(replace_unicode = replace_unicode)
             else:
-                text = self.extract_text_from_pdf()
+                text = self.extract_text_from_pdf(replace_unicode = replace_unicode)
             
             if text and len(text) > 50: # Check if there is substantial text
                 return text
@@ -133,7 +133,7 @@ class PDFLoader:
             return False
     
     
-    def extract_text_with_PyPDFLoader(self):
+    def extract_text_with_PyPDFLoader(self, replace_unicode=True):
         """
         Loads and splits the PDF into pages.
         
@@ -150,7 +150,7 @@ class PDFLoader:
         self.logger.info('[PDFLoader] PDF Loaded and split into pages.')
         return "\n".join(all_pages_text)
     
-    def clean_text(self, text):
+    def clean_text(self, text, replace_unicode=True):
         """
         Cleans the text by replacing special characters with their correct counterparts.
         
@@ -168,11 +168,12 @@ class PDFLoader:
             text = text.replace(old, new)
             
         # Replace non-ASCII characters with '?'
-        text = text.encode('ascii', 'replace').decode('ascii')
+        if replace_unicode:
+            text = text.encode('ascii', 'replace').decode('ascii')
         
         return text
     
-    def extract_text_from_pdf_with_PyPDF2(self):
+    def extract_text_from_pdf_with_PyPDF2(self,replace_unicode=True):
         self.logger.info('[PDFLoader] Extracting text using PyPDF2.')
         all_text = ""
         if not self.pdf_path.lower().endswith('.pdf'):
@@ -182,7 +183,7 @@ class PDFLoader:
                 pdf_reader = PyPDF2.PdfReader(file)
                 for page in pdf_reader.pages:
                     page_text = page.extract_text() or ""  # Handle None
-                    all_text += self.clean_text(page_text) + "\n"
+                    all_text += self.clean_text(page_text, replace_unicode = replace_unicode) + "\n"
         
         except FileNotFoundError:
             print("[scalexi-pdf-loader] PDF file not found.")
@@ -220,7 +221,7 @@ class PDFLoader:
         space_ratio = space_count / total_chars
         return space_ratio > max_expected_ratio
 
-    def extract_text_pdfplumber(self):
+    def extract_text_pdfplumber(self, replace_unicode=True):
         """
         Extracts text from the PDF using pdfplumber.
         
@@ -235,14 +236,14 @@ class PDFLoader:
             with pdfplumber.open(self.pdf_path) as pdf:
                 for page in pdf.pages:
                     page_text = page.extract_text() or ""
-                    text += self.clean_text(page_text)
+                    text += self.clean_text(page_text, replace_unicode = replace_unicode) + "\n"
         except Exception as e:
             print(f"Failed to read PDF with pdfplumber: {e}")
             text = None
         return text
 
             
-    def extract_text_from_pdf(self):
+    def extract_text_from_pdf(self, replace_unicode=True):
         """
         Extracts text from the PDF using PyPDF2 and pdfplumber.
         
@@ -251,11 +252,11 @@ class PDFLoader:
         """
         self.logger.info('[PDFLoader] Extracting text from PDF.')
         
-        text = self.extract_text_from_pdf_with_PyPDF2()
+        text = self.extract_text_from_pdf_with_PyPDF2(replace_unicode = replace_unicode)
         if text and len(text) > 50 and not any(ord(char) > 128 for char in text) and not self.is_spacing_anomalous(text):
             return text
         else:
-            text = self.extract_text_pdfplumber()
+            text = self.extract_text_pdfplumber(replace_unicode = replace_unicode)
             if text and len(text) >= 50: # Check if there is substantial text
                 return text
             else:
