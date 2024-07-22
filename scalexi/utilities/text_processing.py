@@ -464,6 +464,55 @@ def get_openai_pricing_info():
     data = pkgutil.get_data('scalexi', 'data/openai_pricing.json')
     pricing_info = json.loads(data)
     return pricing_info
+
+def get_text_statistics_from_text(extracted_text, model_name="gpt-4"):
+    """
+    Provides descriptive statistics about the given text.
+
+    :param extracted_text: The text extracted from a PDF.
+    :param model_name: The name of the model to use for token calculation.
+
+    :return: A dictionary containing descriptive statistics about the text.
+    """
+    # Initialize variables for collecting text and word counts per page
+    all_text = extracted_text
+    words_per_page = []
+
+    # Split text into pages assuming each page has approximately the same number of characters
+    # This is a simplification; you might need a more complex method to split pages
+    words = re.findall(r'\w+', all_text)
+    num_words = len(words)
+
+    # Number of characters
+    num_chars = len(all_text)
+    
+    # Number of sentences
+    sentences = re.split(r'[.!?]+', all_text)
+    num_sentences = len(sentences) - 1  # Adjust for possible trailing empty string
+    
+    # Most common words
+    word_freq = Counter(words)
+    most_common_words = word_freq.most_common(10)
+    print('most_common_words:', most_common_words)
+
+    # Token count
+    num_tokens = calculate_token_usage_for_text(all_text, model_name)
+    
+    # Generate statistics dictionary
+    stats = {
+        "num_chars": num_chars,
+        "num_words": num_words,
+        "num_sentences": num_sentences,
+        "most_common_words": str(most_common_words),
+        "num_tokens": num_tokens,
+        "num_pages": None,  # Page count is not applicable here
+        "words_per_page": None,  # Words per page is not applicable here
+        "file_size": None,  # File size is not applicable here
+        "file_path": None,  # File path is not applicable here
+        "model_name": model_name
+    }   
+    
+    return stats
   
 
 def get_text_statistics(pdf_path, model_name="gpt-4"):
