@@ -102,6 +102,8 @@ class PDFLoader:
             if loader_type.lower() == "pdfplumber":
                 text = self.extract_text_pdfplumber()
             elif loader_type.lower() == "pypdf2":
+                text = self.extract_text_from_pdf_with_PyPDF2()
+            elif loader_type.lower() == "pypdf":
                 text = self.extract_text_with_PyPDFLoader()
             else:
                 text = self.extract_text_from_pdf()
@@ -138,6 +140,7 @@ class PDFLoader:
         Returns:
             str: The complete text extracted from all pages of the PDF.
         """
+        self.logger.info('[PDFLoader] Extracting text using PyPDFLoader.')
         # Check file extension
         if not self.pdf_path.lower().endswith('.pdf'):
             return None
