@@ -27,6 +27,7 @@ pricing = OpenAIPricing(pricing_info)
 
 context_lengths = {
                 "gpt-4o": 128000,
+                "gpt-4o-mini": 128000,
                 "gpt-4o-2024-05-13": 128000,
                 "gpt-4-turbo": 128000,
                 "gpt-4-turbo-2024-04-09": 128000,
@@ -165,7 +166,7 @@ def is_pdf_readable(pdf_path):
         with open(pdf_path, "rb") as file:
             reader = PyPDF2.PdfReader(file)
             first_page_text = reader.pages[0].extract_text()
-            if first_page_text and len(first_page_text.strip()) > 50:  # Check if there is substantial text
+            if first_page_text and len(first_page_text.strip()) > 20:  # Check if there is substantial text
                 return True
             else:
                 return False

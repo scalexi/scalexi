@@ -14,7 +14,22 @@
                       "input": 0.005,
                       "output": 0.015,
                       "context_length": 128000
-                  }
+                  },
+                  "gpt-4o-2024-08-06": {
+                      "input": 0.0025,
+                      "output": 0.010,
+                      "context_length": 128000
+                  },
+                  "gpt-4o-mini": {
+                    "input": 0.000150,
+                    "output": 0.000600,
+                    "context_length": 128000
+                },
+                "gpt-4o-mini-2024-07-18": {
+                    "input": 0.000150,
+                    "output": 0.000600,
+                    "context_length": 128000
+                }
               },
               "vision_pricing": {
                   "width": 150,

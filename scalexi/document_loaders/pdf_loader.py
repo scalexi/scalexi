@@ -17,6 +17,7 @@ from collections import Counter
 import pkgutil
 from scalexi.openai.utilities import estimate_inference_cost
 import time
+import fitz  # PyMuPDF
 
 # Create a logger file
 logger = Logger().get_logger()
@@ -39,7 +40,8 @@ class PDFLoader:
         logger (Logger): Logger for logging information.
     """
 
-    def __init__(self, pdf_path=None, model_name="gpt-4o", loader_type = "pdfplumber", openai_key=None, system_prompt = None):
+    def __init__(self, pdf_path=None, model_name=None, loader_type = "pdfplumber", openai_key=None, system_prompt = None, 
+                replace_unicode=True):
         """
         Initializes the PDFLoader with a path to the PDF and an optional model name.
         
@@ -58,8 +60,10 @@ class PDFLoader:
         else:
             logger.warning("OpenAI key not provided. Using default key.")
             self.llm = Generator()
-        
-        self.model_name = model_name
+        if model_name is not None:
+            self.model_name = model_name
+            logger.info(f"Model Name set : {model_name} in constructor of PDFLoader")
+            
         if system_prompt is None:
             self.system_prompt = "Extract the information from the PDF and return a JSON structured string"
         else:
@@ -67,7 +71,7 @@ class PDFLoader:
         #EnvironmentConfigLoader().display_all_env_variables()
         t1= time.time()
         self.loader_type = loader_type
-        self.text = self.load_pdf(loader_type=loader_type)
+        self.text = self.load_pdf(loader_type=loader_type, replace_unicode = replace_unicode)
         self.num_tokens = None
         if self.text is not None:
             self.pdf_loding_execution_time = time.time()-t1
@@ -101,6 +105,8 @@ class PDFLoader:
         try:
             if loader_type.lower() == "pdfplumber":
                 text = self.extract_text_pdfplumber(replace_unicode = replace_unicode)
+            elif loader_type.lower() == "fitz":
+                text = self.extract_text_with_fitz(replace_unicode = replace_unicode)
             elif loader_type.lower() == "pypdf2":
                 text = self.extract_text_from_pdf_with_PyPDF2(replace_unicode = replace_unicode)
             elif loader_type.lower() == "pypdf":
@@ -131,6 +137,41 @@ class PDFLoader:
         except Exception as e:
             print(f"Error checking PDF readability: {e}")
             return False
+    
+    
+
+    def extract_text_with_fitz(self, replace_unicode=True):
+        """
+        Loads and extracts text from the PDF using PyMuPDF (fitz).
+        
+        Returns:
+            str: The complete text extracted from all pages of the PDF.
+        """
+        self.logger.info('[PDFLoader] Extracting text using fitz (PyMuPDF).')
+        
+        # Check file extension
+        if not self.pdf_path.lower().endswith('.pdf'):
+            self.logger.error('[PDFLoader] The file is not a PDF.')
+            return None
+        
+        try:
+            # Open the PDF file
+            document = fitz.open(self.pdf_path)
+            all_pages_text = []
+            
+            # Iterate through all the pages
+            for page_num in range(len(document)):
+                page = document.load_page(page_num)  # Load each page
+                text = page.get_text()  # Extract text from the page
+                all_pages_text.append(text)
+            
+            self.logger.info('[PDFLoader] PDF Loaded and text extracted from all pages.')
+            return "\n".join(all_pages_text)
+        
+        except Exception as e:
+            self.logger.error(f'[PDFLoader] Error extracting text using fitz: {str(e)}')
+            return None
+
     
     
     def extract_text_with_PyPDFLoader(self, replace_unicode=True):
@@ -264,7 +305,11 @@ class PDFLoader:
                 raise ValueError("Text is not readable after trying with pdfplumber and PyPDF2. Upload a Valid PDF")
 
     
-    def extract_information(self, text:str, stream=False, max_tokens=4096, system_prompt = None):
+    def extract_information(self, text:str, 
+                            stream=False, 
+                            max_tokens=4096, 
+                            system_prompt = None, 
+                            model_name=None):
         """
         Extracts information from the given text using a specific prompt ID.
         
@@ -278,7 +323,16 @@ class PDFLoader:
             ValueError: If the prompt ID does not exist in the templates.
             Exception: For other errors that may occur during processing.
         """
+        
+        if model_name is not None:
+            self.model_name = model_name
+            logger.info(f"Model Name changed to: {model_name}")
+        
         self.logger.info('[extract_information] Extracting information.')
+        
+        if self.model_name is None:
+            self.logger.error("[PDFLoader:extract_information] LLM Model Name is None. Error in extracting information")
+            raise ValueError("[PDFLoader:extract_information] Model Name is None. Using default model name")
         
         if system_prompt is None:
             if self.system_prompt is not None:
@@ -321,11 +375,16 @@ class PDFLoader:
         all_text = ""
         words_per_page = []
         num_pages = 0
+        
 
-        with pdfplumber.open(self.pdf_path) as pdf:
-            num_pages = len(pdf.pages)
-            for page in pdf.pages:
-                page_text = page.extract_text()
+        #with pdfplumber.open(self.pdf_path) as pdf:
+
+                
+        # Open the PDF with fitz
+        with fitz.open(self.pdf_path) as pdf:
+            num_pages = len(pdf)
+            for page in pdf:
+                page_text = page.get_text()
                 all_text += page_text
                 
                 # Count words per page
@@ -374,6 +433,7 @@ class PDFLoader:
         
         return stats
     
+    
     def get_first_page(self):
         try:
             # Open the PDF file using pdfplumber
@@ -418,7 +478,10 @@ class PDFLoader:
             self.logger.error('An error occurred while calculating pricing: %s', str(e))
             raise ValueError("[calculate_pricing] Failed to calculate pricing. Upload a Valid PDF")
 
-    def structure_document(self, system_prompt=None, stream=False, max_tokens=4096):
+    def structure_document(self, system_prompt=None, 
+                           stream=False, 
+                           max_tokens=4096, 
+                           model_name=None):
         """
         Structures the document based on a given prompt ID. This method
         loads the PDF, extracts information using a specified prompt, calculates
@@ -434,6 +497,9 @@ class PDFLoader:
                 for the operation, token usage, and execution time. In case of an
                 error, returns None for the response and zeros for all numerical values.
         """
+        if model_name is not None:
+            self.model_name = model_name
+            logger.info(f"Model Name changed to: {model_name}")
         self.logger.info('[PDFLoader] structure_document')
         try:
             complete_text = self.load_pdf(loader_type=self.loader_type)
@@ -443,7 +509,10 @@ class PDFLoader:
             self.logger.debug('complete_text: %s', complete_text)
             if system_prompt is None:
                 system_prompt = self.system_prompt
-            response, price, token_usage, execution_time = self.extract_information(complete_text, system_prompt=system_prompt, stream=stream, max_tokens=max_tokens)
+            response, price, token_usage, execution_time = self.extract_information(complete_text, 
+                                                                                    system_prompt=system_prompt, 
+                                                                                    stream=stream, 
+                                                                                    max_tokens=max_tokens, model_name = self.model_name)
             #print('response:', response)
             price = self.calculate_pricing(token_usage)
             return response, price, token_usage, execution_time
