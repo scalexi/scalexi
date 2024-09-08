@@ -1,70 +1,85 @@
 import os
 import logging
+from logging.handlers import TimedRotatingFileHandler
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file
+load_dotenv()
 
 class Logger:
+    """
+    A class for creating and configuring loggers with the flexibility
+    to log to a console, a file, or both based on environment variables,
+    with daily rotation of the log file.
+    
+    The logger's level and output destination(s) are configurable through
+    environment variables: LOGGING_LEVEL and LOGGING_OUTPUT, loaded from a .env file.
+    """
+
     def __init__(self):
         """
-        Initializes the Logger object, configuring the logging settings based on environment variables.
-
-        :method __init__: Sets up logging configuration using an environment variable for the logging level, with a default level of 'WARNING'.
-        :type __init__: method
-
-        This method reads the logging level from an environment variable named 'LOGGING_LEVEL'. If this variable is not set or contains an invalid value, it defaults to 'WARNING'. The logging format is set to include timestamps, logging level, and the message.
-
-        :return: None.
-        :rtype: None
+        Initializes the Logger instance by configuring the logging based on
+        environment variables loaded from a .env file. The default logging level
+        is WARNING, and the default output is console.
         """
+        # Clear existing handlers
+        logging.getLogger().handlers = []
+
         # Read logging level from environment variable
         logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
+        logging_output = os.getenv('LOGGING_OUTPUT', 'console').lower()
 
-        # Configure logging with the level from the environment variable
-        logging.basicConfig(
-            level=getattr(logging, logging_level, logging.WARNING),  # Default to WARNING if invalid level
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
+        handlers = []
+        log_format = ('[LOGGER] %(asctime)s - %(name)s - [%(threadName)s] '
+                      '%(levelname)s in %(filename)s:%(lineno)d:%(funcName)s - %(message)s')
+        simple_log_format = '[LOGGER] %(asctime)s - %(levelname)s - %(message)s'
 
-        # Create and return a logger object
+        # Configure handlers based on environment variable
+        if logging_output in ('file', 'both'):
+            # Timed rotating file handler (rotates logs daily)
+            file_handler = TimedRotatingFileHandler(
+                'app.log', # Log file name
+                when='midnight', # Rotate logs at midnight
+                interval=1, # Rotate logs every day
+                backupCount=30  # Keep 30 days of logs
+            )
+            file_handler.suffix = "%Y-%m-%d"  # Append the date to the filename
+            file_handler.setFormatter(logging.Formatter(log_format))
+            handlers.append(file_handler)
+
+        if logging_output in ('console', 'both'):
+            # Console handler
+            console_handler = logging.StreamHandler()
+            console_handler.setFormatter(logging.Formatter(simple_log_format))
+            handlers.append(console_handler)
+
+        # Create and configure a logger
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(getattr(logging, logging_level, logging.WARNING))
+        
+        # Remove all handlers associated with the logger instance
+        while self.logger.hasHandlers():
+            self.logger.removeHandler(self.logger.handlers[0])
+
+        # Add new handlers
+        for handler in handlers:
+            self.logger.addHandler(handler)
 
     def get_logger(self):
         """
-        Retrieves the logger instance.
-
-        :method get_logger: Returns the configured logger object for logging messages.
-        :type get_logger: method
-
-        This method provides access to the logger instance created during the initialization of the Logger class. It allows for logging messages with the configured logging level and format.
-
-        :return: The logger instance.
-        :rtype: logging.Logger
-        """
-
-        return self.logger
-    
-    def setLevel(self, level):
-        """
-        Sets the logging level of the logger instance.
-
-        :method setLevel: Updates the logging level of the logger to the specified level.
-        :type setLevel: method
-
-        :param level: The desired logging level (e.g., 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL').
-        :type level: str
-
-        This method attempts to set the logger's level to the specified level. If the provided level is invalid, it logs a warning message and retains the current logging level.
-
-        :raises AttributeError: If an invalid logging level is specified.
+        Returns the logger instance.
         
-        :return: None.
-        :rtype: None
+        Returns:
+            logging.Logger: The configured logger instance.
+        """
+        return self.logger
 
-        :example:
-
-        ::
-
-            >>> logger = Logger()
-            >>> logger.setLevel("INFO")
-            # Sets the logging level of the logger to 'INFO'.
+    def set_level(self, level):
+        """
+        Sets the logging level of the logger.
+        
+        Parameters:
+            level (str): The logging level to set (e.g., 'DEBUG', 'INFO').
         """
         try:
             self.logger.setLevel(getattr(logging, level.upper()))
