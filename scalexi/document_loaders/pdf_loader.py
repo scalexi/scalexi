@@ -502,7 +502,8 @@ class PDFLoader:
             logger.info(f"Model Name changed to: {model_name}")
         self.logger.info('[PDFLoader] structure_document')
         try:
-            complete_text = self.load_pdf(loader_type=self.loader_type)
+            complete_text = self.load_pdf(loader_type=self.loader_type).replace("%", " percent ")   # Load the PDF and extract text
+            complete_text = complete_text.replace("%", " percent ")
             if complete_text is None:
                 self.logger.error("[structure_document] Failed to load the PDF. Upload a Valid PDF")
                 raise ValueError("[structure_document] Failed to load the PDF. Upload a Valid PDF")
