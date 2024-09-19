@@ -405,7 +405,7 @@ class PDFLoader:
         # Most common words
         word_freq = Counter(words)
         most_common_words = word_freq.most_common(10)
-        print('most_common_words:', most_common_words)
+        #print('most_common_words:', most_common_words)
         # Token count
         num_tokens = pricing.calculate_token_usage_for_text(all_text, model_name)
         

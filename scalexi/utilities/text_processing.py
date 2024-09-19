@@ -427,7 +427,7 @@ def get_text_statistics_basic(pdf_path, model_name="gpt-4"):
     # Most common words
     word_freq = Counter(words)
     most_common_words = word_freq.most_common(10)
-    print('most_common_words:', most_common_words)
+    #print('most_common_words:', most_common_words)
     # Token count
     num_tokens = pricing.calculate_token_usage_for_text(all_text, model_name)
     
@@ -494,7 +494,7 @@ def get_text_statistics_from_text(extracted_text, model_name="gpt-4"):
     # Most common words
     word_freq = Counter(words)
     most_common_words = word_freq.most_common(10)
-    print('most_common_words:', most_common_words)
+    #print('most_common_words:', most_common_words)
 
     # Token count
     num_tokens = calculate_token_usage_for_text(all_text, model_name)
