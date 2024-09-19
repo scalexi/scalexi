@@ -284,7 +284,7 @@ class LLMEvaluation:
 
 
     def rephrase_and_optionally_classify(self, prompt, 
-                                         model_name="gpt-4", 
+                                         model_name="gpt-4o-mini", 
                                         classify=False, classes=None,
                                         prompt_style='student-asking', 
                                         temperature=1, max_tokens=256, 
