@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import csv
 import os
 import logging
+from pygments import highlight, lexers, formatters
 
 # Read logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'WARNING').upper()
@@ -22,6 +23,16 @@ class DataFormatter:
     def __init__(self):
         pass
 
+    def pretty_print_json(self, data):
+        """ Pretty print a Python dictionary as formatted and colored JSON. """
+        if type(data) == dict:
+            formatted_json = json.dumps(data, sort_keys=True, indent=4)
+        else:
+            formatted_json = data
+        #formatted_json = json.dumps(data, sort_keys=True, indent=4)  # Convert dict to formatted JSON string
+        colorful_json = highlight(formatted_json, lexers.JsonLexer(), formatters.TerminalFormatter())  # Apply syntax highlighting
+        print(colorful_json)
+    
     def format_prompt_completion(self, prompt, completion, start_sequence="\n\n###\n\n", end_sequence="END"):
         """
         Formats and structures a user-defined prompt and its corresponding completion into a pandas DataFrame.
