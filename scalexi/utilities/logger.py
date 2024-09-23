@@ -58,8 +58,12 @@ class Logger:
         self.logger.setLevel(getattr(logging, logging_level, logging.WARNING))
         
         # Remove all handlers associated with the logger instance
-        while self.logger.hasHandlers():
-            self.logger.removeHandler(self.logger.handlers[0])
+        #while self.logger.hasHandlers():
+        #    self.logger.removeHandler(self.logger.handlers[0])
+            
+        for handler in list(self.logger.handlers):
+            self.logger.removeHandler(handler)
+
 
         # Add new handlers
         for handler in handlers:
