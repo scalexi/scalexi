@@ -1,0 +1,27 @@
+vectorstore:
+  vectorstore_options: ["chroma", "faiss"]
+  type: "chroma"  # Options: "faiss", "other_provider"
+  directory_path: "data"
+  persist_directory: "data/vectorstores"
+  chunk_size: 1000
+  chunk_overlap: 200
+  text_splitter: 
+    text_splitters_options: ["spacy", "ai21", "recursive", "semantic", "token", "character", "sentence", "html"]
+    type: "recursive"  
+    model_options: ["text-embedding-3-small", "text-embedding-3-medium", "text-embedding-3-large"]
+    model: "text-embedding-3-small"  # Optional model for the semantic chunker
+  vectorstore_filename: "vectorstore_db"
+
+embedding_model:
+  provider_options: ["openai"]
+  provider: "openai"  # Options: "openai", "other_provider"
+  model_options: ["text-embedding-3-small", "text-embedding-3-medium", "text-embedding-3-large"]
+  model: "text-embedding-3-small"  # Model name for the embedding provider
+
+retrieval:
+  top_k_docs: 2
+  search_type_options: ["similarity", "mmr", "similarity_score_threshold"]
+  search_type: "mmr"
+  score_threshold: 0.4
+  fetch_k: 10
+  lambda_mult: 0.6

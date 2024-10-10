@@ -1,0 +1,8 @@
+--- PDF Extraction Statistics ---
+Total Documents Processed: 191
+Successful Documents: 191
+Failed Documents: 0
+Total Pages Processed: 11841
+Successful Pages: 11569
+Failed Pages: 0
+----------------------------------
