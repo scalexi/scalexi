@@ -19,6 +19,6 @@ tool = TavilySearchResults(
     # args_schema=...,       # overwrite default args_schema: BaseModel
 )
 
-result = tool.invoke({"query": "What is the Islamic perspective on DNA testing for paternity?"})
+result = tool.invoke({"query": "What is Salafiya?"})
 
 print(result)

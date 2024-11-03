@@ -433,7 +433,8 @@ class PromptCompletionGenerator:
                    retry_limit: int = 3,
                    num_questions: int = 3, 
                    question_types: List[str] = None,
-                   detailed_explanation: bool = True):
+                   detailed_explanation: bool = True,
+                   encoding="utf-8"):
         """
         Generates a dataset with various types of questions based on the provided context.
 
@@ -503,7 +504,7 @@ class PromptCompletionGenerator:
         if question_types is None:
             question_types = ["open-ended", "yes-no", "reflective", "closed-ended"]
 
-        context_df = self.context_extractor.from_csv_as_df(context_filename, encoding="utf-8")
+        context_df = self.context_extractor.from_csv_as_df(context_filename, encoding=encoding)
 
         for index, row in context_df.iterrows():
             context = row['context']

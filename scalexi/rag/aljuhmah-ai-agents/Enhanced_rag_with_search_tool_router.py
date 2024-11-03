@@ -43,7 +43,8 @@ class RouteQuery(BaseModel):
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 structured_llm_router = llm.with_structured_output(RouteQuery)
 system = """You are an expert at routing a user question to a vectorstore or web search.
-The vectorstore contains documents related to AlJumuah magazine's teachings, focusing on understanding and living by the Final Heavenly Message from God, and following the Last Messenger, Muhammad ﷺ.
+The vectorstore contains documents related to AlJumuah magazine's teachings, focusing on understanding and living by the Final Heavenly Message from God, 
+and following the Last Messenger, Muhammad ﷺ.
 Use the vectorstore for questions on these topics. Otherwise, use web-search."""
 route_prompt = ChatPromptTemplate.from_messages([
     ("system", system),

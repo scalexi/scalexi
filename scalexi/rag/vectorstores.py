@@ -263,7 +263,7 @@ class VectorstoreManager:
             self.logger.info("Embeddings saved to FAISS vector store")
             
 
-    def display_and_save_stats(self):
+    def display_and_save_stats(self, is_save=False):
         """
         Displays extraction statistics and saves them to a file.
         """
@@ -272,7 +272,8 @@ class VectorstoreManager:
             for key, value in self.stats.items():
                 log_message = f"{key.replace('_', ' ').title()}: {value}"
                 self.logger.info(log_message)
-                f.write(f"{log_message}\n")
+                if is_save:
+                    f.write(f"{log_message}\n")
 
     def initialize_vectorstore(self):
         """
