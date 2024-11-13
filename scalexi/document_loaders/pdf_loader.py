@@ -104,15 +104,15 @@ class PDFLoader:
         self.logger.info('[PDFLoader] Loading PDF.')
         try:
             if loader_type.lower() == "pdfplumber":
-                text = self.extract_text_pdfplumber(replace_unicode = replace_unicode)
+                text = self.extract_text_pdfplumber(replace_unicode = replace_unicode).replace('“', '').replace('”', '').replace('"', '').replace('’', "'")
             elif loader_type.lower() == "fitz":
-                text = self.extract_text_with_fitz(replace_unicode = replace_unicode)
+                text = self.extract_text_with_fitz(replace_unicode = replace_unicode).replace('“', '').replace('”', '').replace('"', '').replace('’', "'")
             elif loader_type.lower() == "pypdf2":
-                text = self.extract_text_from_pdf_with_PyPDF2(replace_unicode = replace_unicode)
+                text = self.extract_text_from_pdf_with_PyPDF2(replace_unicode = replace_unicode).replace('“', '').replace('”', '').replace('"', '').replace('’', "'")
             elif loader_type.lower() == "pypdf":
-                text = self.extract_text_with_PyPDFLoader(replace_unicode = replace_unicode)
+                text = self.extract_text_with_PyPDFLoader(replace_unicode = replace_unicode).replace('“', '').replace('”', '').replace('"', '').replace('’', "'")
             else:
-                text = self.extract_text_from_pdf(replace_unicode = replace_unicode)
+                text = self.extract_text_from_pdf(replace_unicode = replace_unicode).replace('“', '').replace('”', '').replace('"', '').replace('’', "'")
             
             if text and len(text) > 50: # Check if there is substantial text
                 return text
@@ -203,7 +203,7 @@ class PDFLoader:
         """
         self.logger.debug('[PDFLoader] Cleaning text.')
         replacements = {
-            'â€™': "'", 'â€œ': '"', 'â€': '"', 'â€”': '-', 'â€“': '-'
+            'â€™': "'", 'â€œ': '"', 'â€': '"', 'â€”': '-', 'â€“': '-', 'â€¢': '*', 'â€¢': '*', 'â€¢': '*','“': '', '”': '', '’': "",
         }
         for old, new in replacements.items():
             text = text.replace(old, new)
@@ -502,8 +502,8 @@ class PDFLoader:
             logger.info(f"Model Name changed to: {model_name}")
         self.logger.info('[PDFLoader] structure_document')
         try:
-            complete_text = self.load_pdf(loader_type=self.loader_type).replace("%", " percent ")   # Load the PDF and extract text
-            complete_text = complete_text.replace("%", " percent ")
+            complete_text = self.load_pdf(loader_type=self.loader_type).replace("%", " percent ").replace('"', '')   # Load the PDF and extract text
+            complete_text = complete_text.replace("%", " percent ").replace('"', '')
             if complete_text is None:
                 self.logger.error("[structure_document] Failed to load the PDF. Upload a Valid PDF")
                 raise ValueError("[structure_document] Failed to load the PDF. Upload a Valid PDF")
