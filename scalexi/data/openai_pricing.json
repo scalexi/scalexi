@@ -6,12 +6,22 @@
               "context": "128K context, October 2023 knowledge cutoff, stronger vision capabilities",
               "models": {
                   "gpt-4o": {
-                      "input": 0.005,
+                      "input": 0.0025,
                       "output": 0.015,
                       "context_length": 128000
                   },
-                  "gpt-4o-2024-05-13": {
-                      "input": 0.005,
+                  "deepseek-chat": {
+                      "input": 0.00014,
+                      "output": 0.00028,
+                      "context_length": 64000
+                  },
+                  "deepseek-reasoner": {
+                      "input": 0.00055,
+                      "output": 0.00219,
+                      "context_length": 64000
+                  },
+                  "gpt-4o-2024-05-0.0025": {
+                      "input": 0.0025,
                       "output": 0.015,
                       "context_length": 128000
                   },

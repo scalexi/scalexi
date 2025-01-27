@@ -17,7 +17,7 @@ setup(
         "pyyaml",
         "lxml",
         "requests",
-        "httpx",
+        "httpx==0.27.0",
         "langchain",
         "langchain-openai",
         "langchain-core",

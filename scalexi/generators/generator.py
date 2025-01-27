@@ -109,7 +109,7 @@ class Generator:
                 top_p=top_p,
                 frequency_penalty=frequency_penalty,
                 presence_penalty=presence_penalty,
-                stop=stop,
+                #stop=stop,
                 stream=stream
             )
             
