@@ -350,3 +350,37 @@ def extract_token_usage(response):
     :return: A dictionary containing the number of tokens used for the prompt, completion, and total.
     """
     return extract_gpt_token_usage(response)
+
+def extract_llm_token_usage(response, model_category):
+        """
+        Extracts the token usage from a ChatCompletion response object and returns it in a dictionary.
+
+        :param response: The ChatCompletion response object.
+        :return: A dictionary containing the number of tokens used for the prompt, completion, and total.
+        """
+        if "openai" in model_category or "gpt" in model_category:
+            if hasattr(response, 'usage'):
+                token_usage = {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                    "cache_prompt_tokens": response.usage.prompt_tokens_details.cached_tokens,
+                    "audio_prompt_tokens": response.usage.prompt_tokens_details.audio_tokens,
+                }
+            else:
+                token_usage = {"error": "No token usage information available"}
+
+            return token_usage
+        elif "claude" in model_category or "anthropic" in model_category:
+            #ddo it for this message structure Message(id='msg_01HWD6QJTtHaKGGFe6oUVn8Q', content=[TextBlock(text="Tears of ancient earth,\nMinerals dissolved in time,\nRivers carry salt to sea -\nNature's endless rhyme.\n\nThrough eons deep and vast,\nEach wave a briny cast,\nFrom rocks worn down at last\nTo waters unsurpassed.", type='text')], model='claude-3-5-sonnet-20241022', role='assistant', stop_reason='end_turn', stop_sequence=None, type='message', usage=Usage(cache_creation_input_tokens=0, cache_read_input_tokens=0, input_tokens=29, output_tokens=61))
+            token_usage = {
+                "prompt_tokens": response.usage.input_tokens,
+                "completion_tokens": response.usage.output_tokens,
+                "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
+                "cache_prompt_tokens": response.usage.cache_creation_input_tokens,
+                "cache_completion_tokens": response.usage.cache_read_input_tokens,
+                "total_cache_tokens": response.usage.cache_creation_input_tokens + response.usage.cache_read_input_tokens
+            }
+            return token_usage
+        else:
+            raise ValueError(f"[extract_llm_token_usage] Model name {model_name} not supported")

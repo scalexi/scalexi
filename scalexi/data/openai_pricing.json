@@ -7,7 +7,7 @@
               "models": {
                   "gpt-4o": {
                       "input": 0.0025,
-                      "output": 0.015,
+                      "output": 0.010,
                       "context_length": 128000
                   },
                   "deepseek-chat": {
@@ -22,7 +22,7 @@
                   },
                   "gpt-4o-2024-05-0.0025": {
                       "input": 0.0025,
-                      "output": 0.015,
+                      "output": 0.010,
                       "context_length": 128000
                   },
                   "gpt-4o-2024-08-06": {
