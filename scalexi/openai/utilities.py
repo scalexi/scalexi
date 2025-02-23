@@ -364,9 +364,13 @@ def extract_llm_token_usage(response, model_category):
                     "prompt_tokens": response.usage.prompt_tokens,
                     "completion_tokens": response.usage.completion_tokens,
                     "total_tokens": response.usage.total_tokens,
-                    "cache_prompt_tokens": response.usage.prompt_tokens_details.cached_tokens,
-                    "audio_prompt_tokens": response.usage.prompt_tokens_details.audio_tokens,
+                    "cache_prompt_tokens": -1,
+                    "audio_prompt_tokens": -1
                 }
+                # Add details if available
+                if hasattr(response.usage, 'prompt_tokens_details'):
+                    token_usage["cache_prompt_tokens"] = response.usage.prompt_tokens_details.cached_tokens
+                    token_usage["audio_prompt_tokens"] = response.usage.prompt_tokens_details.audio_tokens
             else:
                 token_usage = {"error": "No token usage information available"}
 
@@ -383,4 +387,4 @@ def extract_llm_token_usage(response, model_category):
             }
             return token_usage
         else:
-            raise ValueError(f"[extract_llm_token_usage] Model name {model_name} not supported")
+            raise ValueError(f"[extract_llm_token_usage] Model name {model_category} not supported")
