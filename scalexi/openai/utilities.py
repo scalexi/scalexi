@@ -358,7 +358,7 @@ def extract_llm_token_usage(response, model_category):
         :param response: The ChatCompletion response object.
         :return: A dictionary containing the number of tokens used for the prompt, completion, and total.
         """
-        if "openai" in model_category or "gpt" in model_category:
+        if "openai" in model_category or "gpt" in model_category or "gemini" in model_category:
             if hasattr(response, 'usage'):
                 token_usage = {
                     "prompt_tokens": response.usage.prompt_tokens,
@@ -369,8 +369,10 @@ def extract_llm_token_usage(response, model_category):
                 }
                 # Add details if available
                 if hasattr(response.usage, 'prompt_tokens_details'):
-                    token_usage["cache_prompt_tokens"] = response.usage.prompt_tokens_details.cached_tokens
-                    token_usage["audio_prompt_tokens"] = response.usage.prompt_tokens_details.audio_tokens
+                    if hasattr(response.usage.prompt_tokens_details, 'cached_tokens'):  
+                        token_usage["cache_prompt_tokens"] = response.usage.prompt_tokens_details.cached_tokens
+                    if hasattr(response.usage.prompt_tokens_details, 'audio_tokens'):
+                        token_usage["audio_prompt_tokens"] = response.usage.prompt_tokens_details.audio_tokens
             else:
                 token_usage = {"error": "No token usage information available"}
 
@@ -387,4 +389,4 @@ def extract_llm_token_usage(response, model_category):
             }
             return token_usage
         else:
-            raise ValueError(f"[extract_llm_token_usage] Model name {model_category} not supported")
+            raise ValueError(f"[extract_llm_token_usage] Model category {model_category} not supported")
